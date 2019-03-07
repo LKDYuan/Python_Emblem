@@ -5,4 +5,6 @@ This repository is to centralize all files used in this school project, Python E
 
 <code>Vive la programmation!</code>
 
-#### Link at atom://teletype/portal/10b22648-6745-4585-9499-2aaa2981a13b
+##### Atom link:
+
+<code>atom://teletype/portal/10b22648-6745-4585-9499-2aaa2981a13b</code>
