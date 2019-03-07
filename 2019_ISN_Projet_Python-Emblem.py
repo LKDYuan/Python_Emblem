@@ -1,19 +1,19 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-##########
+# #########
 # DAI Linkai, TS4
 # DJOUKA Yann, TS3
 # Python Emblem
-##########
+# #########
 
 import tkinter as tk  # pour tout le GUI
 from random import choice  # pour choisir des couleurs au hasard
 from math import ceil  # pour une opération spécifique dans le programme
 
 
-##########
+# #########
 # Variables
-##########
+# #########
 
 # Dimensions maximales du plateau de jeu (provisoire)
 max_win_width = 1275
@@ -82,9 +82,9 @@ def Cursor_hover(mouse):
             _gameboard.itemconfig(tile.gui, fill=tile.type)
 
 
-##########
+# #########
 # Éléments du plateau de jeu
-##########
+# #########
 
 # Les cases
 class Tile:
@@ -130,9 +130,9 @@ class Tile:
                                              fill=self.type, outline="#000000")
 
 
-##########
+# #########
 # Plateau de jeu
-##########
+# #########
 
 # Mise en place d'un plateau
 def Setup_board():
