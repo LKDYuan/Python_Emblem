@@ -30,7 +30,6 @@ tl_size = ((tl_side ** 2 - (tl_side / 2) ** 2) ** 0.5) * 2
 
 # Liste des cases sur le plateau de jeu (provisoire)
 gameboard = (board_width * board_height - board_height // 2) * [0]
-test_gb = (board_width * board_height - board_height // 2) * [0]
 
 
 ##########
@@ -47,40 +46,40 @@ def Op(value):
     return value * tl_side / tl_size
 
 
+# Teste si un clic est dans les limites d'une case
+def Within_limits_tile(tile, mouse):
+    '''limite Ouest x = k1'''
+    tmp_w = tile.w
+    '''limite Est x = k2'''
+    tmp_e = tile.e
+    '''limite Nord-Ouest y = a1 * x + b1'''
+    tmp_nw = -Op(mouse.x) + Op(tile.x) + tile.y - tl_side
+    '''limite Nord-Est y = a2 * x + b2'''
+    tmp_ne = Op(mouse.x) - Op(tile.x) + tile.y - tl_side
+    '''limite Sud-Est y = a3 * x + b3'''
+    tmp_se = -Op(mouse.x) + Op(tile.x) + tile.y + tl_side
+    '''limite Sud-Ouest y = a4 * x + b4'''
+    tmp_sw = Op(mouse.x) - Op(tile.x) + tile.y + tl_side
+    return (tmp_w < mouse.x and mouse.x < tmp_e and mouse.y > tmp_nw and
+            mouse.y > tmp_ne and mouse.y < tmp_se and mouse.y < tmp_sw)
+
+
 # Dans quelle case se trouve le clic?
 def Cursor_tile(mouse):
-    # initiation d'un compteur (provisoire)
-    counter = -1
-    # on teste chaque case individuellement (provisoire)
     for tile in gameboard:
-        counter += 1
+        # on teste si le clic est dans les limites de la case
+        if Within_limits_tile(tile, mouse):
+            _gameboard.create_text(tile.x, tile.y,
+                                   text=gameboard.index(tile), fill="White")
 
-        # définition de variables pour calculer le placement, pour chaque case
-        '''limite Ouest x = k1'''
-        tmp_w = tile.w
-        '''limite Est x = k2'''
-        tmp_e = tile.e
-        '''limite Nord-Ouest y = a1 * x + b1'''
-        tmp_nw = -Op(mouse.x) + Op(tile.x) + tile.y - tl_side
-        '''limite Nord-Est y = a2 * x + b2'''
-        tmp_ne = Op(mouse.x) - Op(tile.x) + tile.y - tl_side
-        '''limite Sud-Est y = a3 * x + b3'''
-        tmp_se = -Op(mouse.x) + Op(tile.x) + tile.y + tl_side
-        '''limite Sud-Ouest y = a4 * x + b4'''
-        tmp_sw = Op(mouse.x) - Op(tile.x) + tile.y + tl_side
 
-        # on teste si le clic est dans la case testée
-        if (tmp_w < mouse.x and mouse.x < tmp_e and mouse.y > tmp_nw and
-           mouse.y > tmp_ne and mouse.y < tmp_se and mouse.y < tmp_sw):
-
-            # si elle est colorée, on la colorie en blanc (provisoire)
-            if not(test_gb[counter] % 2):
-                _gameboard.itemconfig(tile.gui, fill="White")
-
-            # si elle est blanche, on lui redonne sa couleur d'origine
-            else:
-                _gameboard.itemconfig(tile.gui, fill=tile.type)
-            test_gb[counter] += 1
+def Cursor_hover(mouse):
+    for tile in gameboard:
+        # on teste si le curseur est dans les limites de la case
+        if Within_limits_tile(tile, mouse):
+            _gameboard.itemconfig(tile.gui, fill="Black")
+        else:
+            _gameboard.itemconfig(tile.gui, fill=tile.type)
 
 
 ##########
@@ -150,8 +149,9 @@ def Setup_board():
     # positionnement du plateau dans la fenêtre
     _gameboard.pack()
 
-    # action à faire lors d'un clic
+    # diverses actions à faire
     _gameboard.bind("<Button-1>", Cursor_tile)
+    _gameboard.bind("<Motion>", Cursor_hover)
 
     # remplissage de la liste de cases, et du plateau de jeu
     for tl_count in range(len(gameboard)):
