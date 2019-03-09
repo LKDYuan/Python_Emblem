@@ -32,9 +32,9 @@ tl_size = ((tl_side ** 2 - (tl_side / 2) ** 2) ** 0.5) * 2
 gameboard = (board_width * board_height - board_height // 2) * [0]
 
 
-##########
+# #########
 # Programmes
-##########
+# #########
 
 # Choix d'une couleur au hasard (à compléter)
 def Tile_type():
