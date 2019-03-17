@@ -31,6 +31,9 @@ tl_size = ((tl_side ** 2 - (tl_side / 2) ** 2) ** 0.5) * 2
 # Liste des cases sur le plateau de jeu (provisoire)
 gameboard = (board_width * board_height - board_height // 2) * [0]
 
+# Liste des personnages (provisoire)
+characters = []
+
 
 # #########
 # Programmes
@@ -129,23 +132,22 @@ class Tile:
         self.gui = _gameboard.create_polygon(self.pos,
                                              fill=self.type, outline="#000000")
 
-#les personnages
-class character:
-    "il nous faut des personnages"
-    
+
+# Les personnages
+class Character:
+    "Il nous faut peut-être des personnages pour pouvoir les faire combattre"
+
     def __init__(self, tile):
-        
-        #définition de la couleur des cubemen
+        # définition de la couleur des cubemen (provisoire)
         self.type = choice(["white", "black"])
-        
-        # placement du personnage sur le plateau
-        self.x, self.y = tile.x, tile.y
-        
-        #création de cubemen
-        _gameboard.create_rectangle(tile.x-(0.25*tl_size),tile.y-(0.25*tl_side),
-                                    tile.x+(0.25*tl_size),tile.y+(0.25*tl_side),
+
+        # création de cubemen
+        _gameboard.create_rectangle(tile.x - (0.25 * tl_size),
+                                    tile.y - (0.25 * tl_side),
+                                    tile.x + (0.25 * tl_size),
+                                    tile.y + (0.25 * tl_side),
                                     fill=self.type)
-        
+
 
 # #########
 # Plateau de jeu
@@ -173,9 +175,10 @@ def Setup_board():
     # remplissage de la liste de cases, et du plateau de jeu
     for tl_count in range(len(gameboard)):
         gameboard[tl_count] = Tile(tl_count)
-    
+
     # création de personnages
-    marth = character(gameboard[choice(range(len(gameboard)))])
+    for char in range(10):
+        characters.append(Character(choice(gameboard)))
 
     # affichage de la fenêtre
     _game_win.mainloop()
