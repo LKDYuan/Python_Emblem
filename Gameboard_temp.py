@@ -17,7 +17,7 @@ from time import sleep
 # #########
 
 # Dimensions du plateau de jeu
-vert_scale = 0.47  # facteur d'étirement vertical (effet 3D) [modifiable]
+vert_scale = 7  # facteur d'étirement vertical (effet 3D) [modifiable]
 win_dim = min((660 * 19 / 20) / vert_scale, 1260)  # dimensions maximales
 space = win_dim / 20  # espace vide au-dessus du plateau (effet 3D)
 center = win_dim / 2  # case du milieu (référentiel)
@@ -62,6 +62,7 @@ def Rotate_board(mouse):
     for layer in gameboard:
         for tile in layer:
             Tile.Position(tile)
+            
     sleep(0.005)
 
 
@@ -128,6 +129,7 @@ class Tile:
         self.points = Hex_points(self)
 
         # coordonnées des cases après étirement par vert_scale
+        self.disp_y = self.y * vert_scale + space
         self.disp = []
         for point in self.points:
             self.disp.append(point[0])
@@ -157,6 +159,22 @@ class Tile:
         _gameboard.itemconfig(self.gui, fill=self.type,  outline=self.type)
 
 
+# Les personnages
+class Character:
+    "Il nous faut peut-être des personnages pour pouvoir les faire combattre"
+
+    def __init__(self, tile):
+        # définition de la couleur des cubemen (provisoire)
+        self.type = choice(["white", "black"])
+
+        # création de cubemen
+        _gameboard.create_rectangle(tile.x - (0.25 * tl_size),
+                                    tile.disp_y - (0.25 * tl_side),
+                                    tile.x + (0.25 * tl_size),
+                                    tile.disp_y + (0.25 * tl_side),
+                                              fill=self.type)
+                                              
+
 # ###################
 # Programme principal
 # ###################
@@ -170,13 +188,16 @@ _gameboard = tk.Canvas(_game_win, width=win_dim,
                        height=win_dim * vert_scale + space, bg="#000000")
 _gameboard.pack()
 
+#Appeler le personnage
+
 # Tourner le plateau quand la souris bouge [provisoire]
-_gameboard.bind("<Motion>", Rotate_board)
+# _gameboard.bind("<Motion>", Rotate_board)
 
 # Création des cases
 for layer in gameboard:
     for tile in range(len(layer)):
         layer[tile] = Tile(gameboard.index(layer), tile)
+        Character(layer[tile])
 
 # Création de la fenêtre
 _game_win.mainloop()
