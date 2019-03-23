@@ -21,7 +21,7 @@ vert_scale = 0.47  # facteur d'étirement vertical (effet 3D) [modifiable]
 win_dim = min((660 * 19 / 20) / vert_scale, 1260)  # dimensions maximales
 space = win_dim / 20  # espace vide au-dessus du plateau (effet 3D)
 center = win_dim / 2  # case du milieu (référentiel)
-board_side = 9  # nombre de cases sur un côté du plateau hexagonal [modifiable]
+board_side = 6  # nombre de cases sur un côté du plateau hexagonal [modifiable]
 rotate = 0  # rotation du plateau en radians [modifiable]
 
 # Dimensions des cases
@@ -74,8 +74,6 @@ class Tile:
 
     # Création de la case
     def __init__(self, layer, indice):
-        global _gameboard
-
         # attributs qualitatifs de la case
         self.color = Tile_type()
         self.type = self.color
@@ -128,6 +126,7 @@ class Tile:
         self.points = Hex_points(self)
 
         # coordonnées des cases après étirement par vert_scale
+        self.disp_y = self.y * vert_scale + space
         self.disp = []
         for point in self.points:
             self.disp.append(point[0])
