@@ -202,26 +202,6 @@ class Tile:
                           self.disp_y)
 
 
-# Les personnages
-class Character:
-    "Il nous faut peut-être des personnages pour pouvoir les faire combattre"
-
-    def __init__(self, tile):
-        # définition de la couleur des cubemen (provisoire)
-        self.type = choice(["white", "black"])
-
-        # création de cubemen
-        self.gui = _gameboard.create_rectangle(0, 0, 0, 0,
-                                               fill=self.type,
-                                               outline=self.type)
-        self.Position(self, tile)
-
-    def Position(self, tile):
-        _gameboard.coords(self.gui, tile.x - 0.25 * tl_size,
-                          tile.disp_y - space, tile.x + 0.25 * tl_size,
-                          tile.disp_y)
-
-
 # ###################
 # Programme principal
 # ###################
