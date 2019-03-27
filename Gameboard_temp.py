@@ -197,8 +197,8 @@ class Tile:
 
     # Positionnement du personnage sur le plateau
     def Char_position(self):
-        _gameboard.coords(self.char_gui, self.x - 0.25 * tl_size,
-                          self.disp_y - space, self.x + 0.25 * tl_size,
+        _gameboard.coords(self.char_gui, self.x - 0.15 * tl_size,
+                          self.disp_y - space, self.x + 0.15 * tl_size,
                           self.disp_y)
 
 
