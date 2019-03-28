@@ -39,8 +39,8 @@ for layer in range(1, board_side):
 
 # Liste des personnages
 characters = {}
-characters[marth]={ATK:25, HP: 200, DEF:5},
-characters[G.O.D]={ATK:999999999999999, HP: 1, DEF:99999999999999999999999999999999999999999999999999999999999}
+characters[marth]={ATK:25, HP:200, DEF:5},
+characters[G.O.D]={ATK:999999999999999, HP:1, DEF:99999999999999999999999999999999999999999999999999999999999}
 '''
 pray for your redemption
 '''         
