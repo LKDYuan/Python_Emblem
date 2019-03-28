@@ -38,7 +38,13 @@ for layer in range(1, board_side):
     gameboard.append(layer * 6 * [0])
 
 # Liste des personnages
-characters = list(gameboard)
+characters = {}
+characters[marth]={ATK:25, HP: 200, DEF:5},
+characters[G.O.D]={ATK:999999999999999, HP: 1, DEF:99999999999999999999999999999999999999999999999999999999999}
+'''
+pray for your redemption
+'''         
+
 
 
 # ##########
