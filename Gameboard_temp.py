@@ -46,23 +46,9 @@ pray for your redemption
 '''
 
 
-# ##########
-# Programmes
-# ##########
-
-# Sommets d'une case hexagonale
-def Hex_points(tile):
-    tmp_l = []
-    for pt in range(6):
-        tmp_l.append([tile.x + tl_side * cos(pt * pi / 3 - pi / 6 + rotate),
-                      tile.y + tl_side * sin(pt * pi / 3 - pi / 6 + rotate)])
-    return tmp_l
-
-
-# Couleurs d'un case [provisoire]
-def Tile_type():
-    return choice(["#ff0000", "#00ff00", "#0000ff"])
-
+# #########
+# Fonctions
+# #########
 
 # Rotation du plateau complet
 def Rotate_board():
@@ -93,7 +79,7 @@ class Tile:
     # Création de la case
     def __init__(self, layer, indice):
         # attributs qualitatifs de la case
-        self.color = Tile_type()
+        self.color = Tile.Tile_type()
         self.type = self.color
         self.clicked = False
 
@@ -123,10 +109,10 @@ class Tile:
         # création d'un personnage sur la case [provisoire]
         self.has_char = False
         if not self.color == "#0000ff":
-            Tile.Create_char(self)
+            self.Create_char()
 
         # calcul de la position de la case sur le canevas
-        Tile.Position(self)
+        self.Position()
 
     # Position de la case
     def Position(self):
@@ -146,7 +132,7 @@ class Tile:
         self.y = center + self.center_d * sin(tmp_var)
 
         # coordonnées des sommets de la case
-        self.points = Hex_points(self)
+        self.points = self.Hex_points()
 
         # coordonnées des cases après étirement par vert_scale
         self.disp_y = self.y * vert_scale + space
@@ -161,6 +147,19 @@ class Tile:
         # mise à jour de l'emplacement du personnage
         if self.has_char:
             self.Char_position()
+    
+    # Sommets d'une case hexagonale
+    def Hex_points(self):
+        tmp_l = []
+        for pt in range(6):
+            tmp_var = pt * pi / 3 - pi / 6 + rotate
+            tmp_l.append([self.x + tl_side * cos(tmp_var),
+                          self.y + tl_side * sin(tmp_var)])
+        return tmp_l
+    
+    # Couleurs d'un case [provisoire]
+    def Tile_type():
+        return choice(["#ff0000", "#00ff00", "#0000ff"])
 
     # Lorsqu'une case est cliquée
     def Cursor_click(self, mouse):
@@ -216,7 +215,7 @@ _gameboard = tk.Canvas(_game_win, width=win_dim,
                        height=win_dim * vert_scale + space, bg="#000000")
 _gameboard.pack()
 
-# Tourner le plateau quand la souris bouge [provisoire]
+# Tourner le plateau [provisoire]
 _gameboard.after(10, Rotate_board)
 
 # Création des cases
