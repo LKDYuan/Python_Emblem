@@ -1,4 +1,4 @@
-# Python Emblem
+# Smash Emblem
 
 This repository is to centralize all files used in this school project, Python Emblem.
 
