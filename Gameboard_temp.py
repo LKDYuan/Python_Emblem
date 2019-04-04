@@ -187,7 +187,7 @@ class Tile:
         self.has_char = True
 
         # couleur du personnage [provisoire]
-        self.char_type = choice(["white", "black"])
+        self.char_type = choice(["#eeeeee", "#222222"])
 
         # positionnement du personnage sur le plateau [provisoire]
         self.char_gui = _gameboard.create_rectangle(0, 0, 0, 0,
