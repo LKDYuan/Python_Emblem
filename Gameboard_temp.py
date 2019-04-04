@@ -92,6 +92,7 @@ class Tile:
         except ZeroDivisionError:
             self.side = 0
         '''index'''
+        self.indice = indice
         try:
             self.pos = indice % layer
         except ZeroDivisionError:
@@ -168,8 +169,42 @@ class Tile:
             self.type = self.color
         else:
             self.type = "#ffffff"
+            if self.layer == 0:
+                for tile in gameboard[1]:
+                    Tile.Reachable_tiles(tile)
+            else:
+                for tile in gameboard[self.layer]:
+                    if tile.indice == (self.indice + 1) % len(gameboard[self.layer]):
+                        Tile.Reachable_tiles(tile)
+                    if tile.indice == (self.indice - 1) % len(gameboard[self.layer]):
+                        Tile.Reachable_tiles(tile)
+                if self.pos == 0:
+                    for tile in gameboard[self.layer - 1]:
+                        if tile.side == self.side and tile.pos == 0 or tile.layer == 0:
+                            Tile.Reachable_tiles(tile)
+                    if self.layer != board_side - 1:
+                        for tile in gameboard[self.layer + 1]:
+                            if tile.side == self.side and tile.pos <= 1:
+                                Tile.Reachable_tiles(tile)
+                            if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
+                                Tile.Reachable_tiles(tile)
+                '''else:
+                    for tile in gameboard[self.layer - 1]:
+                        if tile.side == self.side and tile.pos == 0 or tile.layer == 0:
+                            Tile.Reachable_tiles(tile)
+                    if self.layer != board_side - 1:
+                        for tile in gameboard[self.layer + 1]:
+                            if tile.side == self.side and tile.pos <= 1:
+                                Tile.Reachable_tiles(tile)
+                            if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
+                                Tile.Reachable_tiles(tile)'''
+                    
         _gameboard.itemconfig(self.gui, fill=self.type, outline=self.type)
         self.clicked = not self.clicked
+
+    def Reachable_tiles(tile):
+        _gameboard.itemconfig(tile.gui, fill="#ffff00", outline="#ffff00")
+        return
 
     # Lorsque la souris est au-dessus d'une case
     def Cursor_enter(self, mouse):
