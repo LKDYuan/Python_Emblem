@@ -25,7 +25,7 @@ vert_scale = 0.5  # facteur d'étirement vertical (effet 3D) [modifiable]
 win_dim = min((scrn_h * 19 / 20) / vert_scale, scrn_w)  # dimensions maximales
 space = win_dim / 20  # espace vide au-dessus du plateau (effet 3D)
 center = win_dim / 2  # case du milieu (référentiel)
-board_side = 6  # nombre de cases sur un côté du plateau hexagonal [modifiable]
+board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable]
 rotate = 0  # rotation du plateau en radians [modifiable]
 rotate_delay = 15  # temps en ms entre 2 mises à jour du plateau [modifiable]
 
@@ -110,8 +110,9 @@ class Tile:
 
         # création d'un personnage sur la case [provisoire]
         self.has_char = False
-        if not self.color == "#0000ff":
-            self.Create_char()
+        if self.color != "#0000bb":
+            # self.Create_char()
+            pass
 
         # calcul de la position de la case sur le canevas
         self.Position()
@@ -161,7 +162,7 @@ class Tile:
 
     # Couleurs d'un case [provisoire]
     def Tile_type():
-        return choice(["#ff0000", "#00ff00", "#0000ff"])
+        return choice(["#008800", "#008800", "#008800", "#0000bb"])
 
     # Lorsqu'une case est cliquée
     def Cursor_click(self, mouse):
@@ -205,14 +206,14 @@ class Tile:
         self.clicked = not self.clicked
 
     def Reachable_tiles(tile):
-        if tile.type != "#0000ff" and tile.type != "#ffffff":
+        if tile.type != "#0000bb" and tile.type != "#ffffff":
             _gameboard.itemconfig(tile.gui, fill="#ffff00", outline="#ffff00")
             tile.tmp_reachable = True
         return
 
     # Lorsque la souris est au-dessus d'une case
     def Cursor_enter(self, mouse):
-        self.type1 = self.color.replace("00", "aa")
+        self.type1 = self.color.replace("00", "77")
         _gameboard.itemconfig(self.gui, fill=self.type1, outline=self.type1)
 
     # Lorsque la souris n'est plus au-dessus d'une case
@@ -256,7 +257,7 @@ _gameboard = tk.Canvas(_game_win, width=win_dim,
 _gameboard.pack()
 
 # Tourner le plateau [provisoire]
-_gameboard.after(10, Rotate_board)
+# _gameboard.after(10, Rotate_board)
 
 # Création des cases
 for layer in gameboard:
