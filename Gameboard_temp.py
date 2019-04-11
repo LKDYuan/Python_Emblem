@@ -9,6 +9,7 @@
 import tkinter as tk
 from math import cos, sin, asin, pi
 from random import choice
+from time import sleep
 
 
 # #########
@@ -39,8 +40,8 @@ for layer in range(1, board_side):
 
 # Liste des personnages
 characters = {}
-characters["marth"]={"ATK":25, "HP":200, "DEF":5},
-characters["GOD"]={"ATK":999999999999999, "HP":1, "DEF":99999999999999999999999999999999999999999999999999999999999}
+characters["marth"] = {"ATK": 25, "HP": 200, "DEF": 5}
+characters["GOD"] = {"ATK": 999999999999999, "HP": 1, "DEF": 99999999999999999999999999999999999999999999999999999999999}
 '''
 pray for your redemption
 '''
@@ -148,7 +149,7 @@ class Tile:
         # mise à jour de l'emplacement du personnage
         if self.has_char:
             self.Char_position()
-    
+
     # Sommets d'une case hexagonale
     def Hex_points(self):
         tmp_l = []
@@ -157,7 +158,7 @@ class Tile:
             tmp_l.append([self.x + tl_side * cos(tmp_var),
                           self.y + tl_side * sin(tmp_var)])
         return tmp_l
-    
+
     # Couleurs d'un case [provisoire]
     def Tile_type():
         return choice(["#ff0000", "#00ff00", "#0000ff"])
@@ -165,45 +166,48 @@ class Tile:
     # Lorsqu'une case est cliquée
     def Cursor_click(self, mouse):
         # basculer entre couleur d'origine et blanc [provisoire]
-        if self.clicked:
-            self.type = self.color
-        else:
-            self.type = "#ffffff"
-            if self.layer == 0:
-                for tile in gameboard[1]:
-                    Tile.Reachable_tiles(tile)
+        if self.has_char:
+            if self.clicked:
+                self.type = self.color
             else:
-                for tile in gameboard[self.layer]:
-                    if tile.indice == (self.indice + 1) % len(gameboard[self.layer]):
+                self.type = "#ffffff"
+                if self.layer == 0:
+                    for tile in gameboard[1]:
                         Tile.Reachable_tiles(tile)
-                    if tile.indice == (self.indice - 1) % len(gameboard[self.layer]):
-                        Tile.Reachable_tiles(tile)
-                if self.pos == 0:
-                    for tile in gameboard[self.layer - 1]:
-                        if tile.side == self.side and tile.pos == 0 or tile.layer == 0:
+                else:
+                    for tile in gameboard[self.layer]:
+                        if tile.indice == (self.indice + 1) % len(gameboard[self.layer]):
                             Tile.Reachable_tiles(tile)
-                    if self.layer != board_side - 1:
-                        for tile in gameboard[self.layer + 1]:
-                            if tile.side == self.side and tile.pos <= 1:
-                                Tile.Reachable_tiles(tile)
-                            if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
-                                Tile.Reachable_tiles(tile)
-                '''else:
-                    for tile in gameboard[self.layer - 1]:
-                        if tile.side == self.side and tile.pos == 0 or tile.layer == 0:
+                        if tile.indice == (self.indice - 1) % len(gameboard[self.layer]):
                             Tile.Reachable_tiles(tile)
-                    if self.layer != board_side - 1:
-                        for tile in gameboard[self.layer + 1]:
-                            if tile.side == self.side and tile.pos <= 1:
+                    if self.pos == 0:
+                        for tile in gameboard[self.layer - 1]:
+                            if tile.side == self.side and tile.pos == 0 or tile.layer == 0:
                                 Tile.Reachable_tiles(tile)
-                            if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
-                                Tile.Reachable_tiles(tile)'''
-                    
+                        if self.layer != board_side - 1:
+                            for tile in gameboard[self.layer + 1]:
+                                if tile.side == self.side and tile.pos <= 1:
+                                    Tile.Reachable_tiles(tile)
+                                if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
+                                    Tile.Reachable_tiles(tile)
+                    else:
+                        for tile in gameboard[self.layer - 1]:
+                            if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos - 1):
+                                Tile.Reachable_tiles(tile)
+                            if self.pos % tile.layer == 0 and tile.side == (self.side + 1) % 6 and tile.pos == 0:
+                                Tile.Reachable_tiles(tile)
+                        if self.layer != board_side - 1:
+                            for tile in gameboard[self.layer + 1]:
+                                if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos + 1):
+                                    Tile.Reachable_tiles(tile)
+
         _gameboard.itemconfig(self.gui, fill=self.type, outline=self.type)
         self.clicked = not self.clicked
 
     def Reachable_tiles(tile):
-        _gameboard.itemconfig(tile.gui, fill="#ffff00", outline="#ffff00")
+        if tile.type != "#0000ff" and tile.type != "#ffffff":
+            _gameboard.itemconfig(tile.gui, fill="#ffff00", outline="#ffff00")
+            tile.tmp_reachable = True
         return
 
     # Lorsque la souris est au-dessus d'une case
@@ -223,6 +227,7 @@ class Tile:
 
         # couleur du personnage [provisoire]
         self.char_type = choice(["#eeeeee", "#222222"])
+        self.char_mvt = choice(range(1, 4))
 
         # positionnement du personnage sur le plateau [provisoire]
         self.char_gui = _gameboard.create_rectangle(0, 0, 0, 0,
