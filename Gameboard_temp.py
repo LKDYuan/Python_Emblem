@@ -28,7 +28,7 @@ board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable
 rotate = 0  # rotation du plateau en radians [modifiable]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
 rotation = False
-tile_types = ["#00ff00", "#00ff00", "#00ff00", "#0000ff"]
+tile_types = ["#008800", "#008800", "#008800", "#0000bb"]
 unreachable = tile_types[3]
 start_tile_type = "#ff0000"
 
@@ -265,7 +265,7 @@ class Tile:
                         pass
             self.Reachable_tiles()
         else:
-            tmp_color = self.color.replace("00", "aa")
+            tmp_color = self.color.replace("00", "77")
             _gameboard.itemconfig(self.gui, fill=tmp_color)
 
     # Lorsque la souris n'est plus au-dessus d'une case
