@@ -25,12 +25,12 @@ win_dim = min((scrn_h * 19 / 20) / vert_scale, scrn_w)  # dimensions maximales
 space = win_dim / 20  # espace vide au-dessus du plateau (effet 3D)
 center = win_dim / 2  # case du milieu (référentiel)
 board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable]
-rotate = 0  # rotation du plateau en radians [modifiable]
+
+
+# Paramètres de la rotation du plateau
+rotate = 0.75  # rotation du plateau en radians [modifiable]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
-rotation = False
-tile_types = ["#008800", "#008800", "#008800", "#0000bb"]
-unreachable = tile_types[3]
-start_tile_type = "#aaaa00"
+rotation = False  # Le plateau tourne-t-il?
 
 
 # Dimensions des cases
@@ -42,10 +42,20 @@ gameboard = [[0]]
 for layer in range(1, board_side):
     gameboard.append(layer * 6 * [0])
 
+# Caractéristiques des cases
+tile_types = ["#008800", "#008800", "#008800", "#0000bb"]  # Types [provisoire]
+unreachable = tile_types[3]  # Sur quels types de cases ne peut-on pas aller?
+start_tile_type = "#aaaa00"  # Type des cases de départ
+
+
 # Liste des personnages
 characters = {}
 characters["Marth"] = {"ATK": 25, "HP": 200, "DEF": 5},
 characters["God"] = {"ATK": 999999999999999, "HP": 1, "DEF": 99999999999999999}
+
+# Caractéristiques des personnages [provisoire, il faut remplir Liste ^]
+char_types = ["#eeeeee", "#222222"]
+mvt_types = range(2, 6)  # ! Attention, la limite supérieure est Off by One !
 
 
 # #########
@@ -76,13 +86,25 @@ def Rotate_board():
     return
 
 
+# Rend aux cases leur couleur d'origine, avant la sélection
+def Clear_board(clear_all):
+    for layer in gameboard:
+        for tile in layer:
+            tile.tmp_reachable = False
+            if clear_all:
+                tile.type = tile.color
+            tile.Recolor()
+
+
 # ######
 # Objets
 # ######
 
 # Les cases
 class Tile:
+    # A-t-on initié un mouvement pour un personnage?
     clicked = False
+    # Compteur des cases parcourues lors d'un mouvement
     mvt_count = 0
 
     # Création de la case
@@ -107,12 +129,14 @@ class Tile:
         except ZeroDivisionError:
             self.pos = 0
 
+        # différentiation des cases de départ
         if self.layer == board_side - 1:
             if self.side == 1 or self.side == 4:
                 self.color = start_tile_type
             if (self.side == 2 or self.side == 5) and self.pos == 0:
                 self.color = start_tile_type
 
+        # coloration de la case
         self.type = self.color
 
         # représentation graphique de la case
@@ -123,17 +147,16 @@ class Tile:
         _gameboard.tag_bind(self.gui, "<Enter>", self.Cursor_enter)
         _gameboard.tag_bind(self.gui, "<Leave>", self.Cursor_leave)
 
-        # création d'un personnage sur la case [provisoire]
+        # création d'un personnage sur les cases de départ
         self.has_char = False
         if self.color == start_tile_type:
             self.char = Tile.Character(self)
 
-        # calcul de la position de la case sur le canevas
         self.Position()
 
     # Position de la case
     def Position(self):
-        # distance au centre (référentiel)
+        # distance au centre
         tmp_var = self.layer ** 2 + self.pos ** 2 - self.layer * self.pos
         self.center_d = tmp_var ** 0.5 * tl_size
 
@@ -158,7 +181,7 @@ class Tile:
             self.disp.append(point[0])
             self.disp.append(point[1] * vert_scale + space)
 
-        # création de la case sur le plateau
+        # affichage de la case sur le canevas
         _gameboard.coords(self.gui, self.disp)
 
     # Sommets d'une case hexagonale
@@ -176,74 +199,89 @@ class Tile:
 
     # Lorsqu'une case est cliquée
     def Cursor_click(self, mouse):
-        # basculer entre couleur d'origine et blanc [provisoire]
-        if self.has_char:
-            if not Tile.clicked:
-                Tile.tmp_tile = self
-                self.Reachable_tiles()
-                self.mvt_distance = 0
-                Tile.clicked = not Tile.clicked
-        elif Tile.clicked and self.type == "#ffffff":
-            for layer in gameboard:
-                for tile in layer:
-                    tile.tmp_reachable = False
-                    tile.type = tile.color
-                    _gameboard.itemconfig(tile.gui, fill=tile.type)
+        # rétablir la couleur des cases à la fin d'un mouvement
+        if Tile.clicked and self.type == "#ffffff":
+            Clear_board(True)
+
+            # déplacement du personnage à la case d'arrivée
             Tile.tmp_tile.char.Move(self)
-            Tile.clicked = not Tile.clicked
+
+            # réinitialisation des variables pour un nouveau mouvement
+            Tile.clicked = False
             Tile.mvt_count = 0
 
-    # Cases adjacentes à une case sélectionnée
+        # commencer le mouvement lorsqu'on sélectionne un personnage
+        elif self.has_char and not Tile.clicked:
+            Tile.clicked = True
+            Tile.tmp_tile = self
+
+            # compteur des cases parcourues (pour respecter le mouvement)
+            self.mvt_distance = 0
+            self.Reachable_tiles()
+
+    # Cases adjacentes à une case sélectionnée [à peaufiner]
     def Reachable_tiles(self):
         self.type = "#ffffff"
-        for layer in gameboard:
-            for tile in layer:
-                tile.tmp_reachable = False
-                tile.Reachable_color()
+        _gameboard.itemconfig(self.gui, fill=self.type)
+        Clear_board(False)
 
+        # pour la case du centre
         if self.layer == 0:
             for tile in gameboard[1]:
                 tile.Reachable()
+
+        # pour les autres cases
         else:
+            # cases adjacentes sur la même couche
             for tile in gameboard[self.layer]:
-                if tile.indice == (self.indice + 1) % len(gameboard[self.layer]):
+                if tile.indice == (self.indice + 1) % (self.layer * 6):
                     tile.Reachable()
-                if tile.indice == (self.indice - 1) % len(gameboard[self.layer]):
+                if tile.indice == (self.indice - 1) % (self.layer * 6):
                     tile.Reachable()
+
+            # cases adjacentes sur des couches différentes
+            # pour les coins d'une couche
             if self.pos == 0:
+                # cases sur la couche du dessous
                 for tile in gameboard[self.layer - 1]:
-                    if tile.side == self.side and tile.pos == 0 or tile.layer == 0:
+                    if self.layer == 1:
                         tile.Reachable()
+                    elif tile.side == self.side and tile.pos == 0:
+                        tile.Reachable()
+
+                # cases sur la couche du dessus (sauf pour la dernière couche)
                 if self.layer != board_side - 1:
                     for tile in gameboard[self.layer + 1]:
                         if tile.side == self.side and tile.pos <= 1:
                             tile.Reachable()
                         if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
                             tile.Reachable()
+
+            # pour les côtés d'un couche
             else:
+                # cases sur la couche du dessous
                 for tile in gameboard[self.layer - 1]:
                     if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos - 1):
                         tile.Reachable()
                     if self.pos % tile.layer == 0 and tile.side == (self.side + 1) % 6 and tile.pos == 0:
                         tile.Reachable()
+
+                # cases sur la couche du dessus (sauf pour la dernière couche)
                 if self.layer != board_side - 1:
                     for tile in gameboard[self.layer + 1]:
                         if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos + 1):
                             tile.Reachable()
 
-        _gameboard.itemconfig(self.gui, fill=self.type)
-
+    # Cette case adjacente est-elle libre?
     def Reachable(self):
         if self.type != unreachable and self.type != "#ffffff" and not self.has_char:
             self.tmp_reachable = True
-            self.Reachable_color()
+            _gameboard.itemconfig(self.gui, fill="#ffff00")
         return
 
-    def Reachable_color(self):
-        if self.tmp_reachable:
-            if self.type != "#ffffff" and self.type != unreachable:
-                _gameboard.itemconfig(self.gui, fill="#ffff00")
-        else:
+    # Les autres cases reprennent leur couleur d'origine
+    def Recolor(self):
+        if not self.tmp_reachable:
             _gameboard.itemconfig(self.gui, fill=self.type)
 
     # Lorsque la souris est au-dessus d'une case
@@ -277,8 +315,8 @@ class Tile:
         def __init__(self, tile):
             self.tile = tile
             self.tile.has_char = True
-            self.char = choice(["#eeeeee", "#222222"])
-            self.mvt_range = choice(range(2, 5))
+            self.char = choice(char_types)
+            self.mvt_range = choice(mvt_types)
             self.gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
                                                    fill=self.char)
             _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
@@ -290,8 +328,8 @@ class Tile:
         def Move(self, tile):
             tmp = self.tile
             tmp.has_char = False
-            tile.char = self
             del tmp.char
+            tile.char = self
             self.tile = tile
             self.tile.has_char = True
             _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
