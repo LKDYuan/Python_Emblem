@@ -30,7 +30,7 @@ rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
 rotation = False
 tile_types = ["#008800", "#008800", "#008800", "#0000bb"]
 unreachable = tile_types[3]
-start_tile_type = "#ff0000"
+start_tile_type = "#aaaa00"
 
 
 # Dimensions des cases
@@ -59,12 +59,14 @@ def Rotate_board():
     # mise à jour de la position de chaque case et de chaque personnage
     for layer in gameboard:
         for tile in layer:
-            Tile.Position(tile)
+            tile.Position()
     # afficher les personnages devant les cases [à compléter pour perspective]
     for layer in gameboard:
         for tile in layer:
             if tile.has_char:
-                _gameboard.tag_raise(tile.char_gui)
+                tile.char.Position()
+                _gameboard.tag_raise(tile.char.gui)
+                _gameboard.tag_raise(tile.char.txt)
 
     rotate = (rotate + pi / 1440) % (2 * pi)
 
@@ -187,7 +189,6 @@ class Tile:
                     tile.tmp_reachable = False
                     tile.type = tile.color
                     _gameboard.itemconfig(tile.gui, fill=tile.type)
-            print(Tile.tmp_tile.char.mvt_range)
             Tile.tmp_tile.char.Move(self)
             Tile.clicked = not Tile.clicked
             Tile.mvt_count = 0
@@ -277,12 +278,14 @@ class Tile:
             self.tile = tile
             self.tile.has_char = True
             self.char = choice(["#eeeeee", "#222222"])
-            self.mvt_range = choice(range(1, 4))
+            self.mvt_range = choice(range(2, 5))
             self.gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
                                                    fill=self.char)
             _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
             _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
             _gameboard.tag_bind(self.gui, "<Leave>", tile.Cursor_leave)
+            self.txt = _gameboard.create_text(0, 0, text=self.mvt_range,
+                                              fill="#7fffff")
 
         def Move(self, tile):
             tmp = self.tile
@@ -294,37 +297,15 @@ class Tile:
             _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
             _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
             _gameboard.tag_bind(self.gui, "<Leave>", tile.Cursor_leave)
-            self.Position(tile)
+            self.Position()
 
-        def Position(self, tile):
-            _gameboard.coords(self.gui, tile.x - 0.15 * tl_size,
-                              tile.disp_y - space, tile.x + 0.15 * tl_size,
-                              tile.disp_y)
-
-    # Création d'un personnage sur la case
-    def Create_char(self):
-
-        # la case contient un personnage !
-        self.has_char = True
-
-        # couleur du personnage [provisoire]
-        self.char_type = choice(["#eeeeee", "#222222"])
-        self.char_mvt = choice(range(1, 4))
-
-        # positionnement du personnage sur le plateau [provisoire]
-        self.char_gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
-                                                    fill=self.char_type)
-
-        # actions sur le personnage
-        _gameboard.tag_bind(self.char_gui, "<Button-1>", self.Cursor_click)
-        _gameboard.tag_bind(self.char_gui, "<Enter>", self.Cursor_enter)
-        _gameboard.tag_bind(self.char_gui, "<Leave>", self.Cursor_leave)
-
-    # Positionnement du personnage sur le plateau
-    def Char_position(self):
-        _gameboard.coords(self.char_gui, self.x - 0.15 * tl_size,
-                          self.disp_y - space, self.x + 0.15 * tl_size,
-                          self.disp_y)
+        def Position(self):
+            _gameboard.coords(self.gui, self.tile.x - 0.15 * tl_size,
+                              self.tile.disp_y - space,
+                              self.tile.x + 0.15 * tl_size,
+                              self.tile.disp_y)
+            _gameboard.coords(self.txt, self.tile.x,
+                              self.tile.disp_y - space / 2)
 
 
 # ###################
@@ -347,8 +328,9 @@ for layer in gameboard:
 for layer in gameboard:
     for tile in layer:
         if tile.has_char:
-            tile.char.Position(tile)
+            tile.char.Position()
             _gameboard.tag_raise(tile.char.gui)
+            _gameboard.tag_raise(tile.char.txt)
 
 # Création de la fenêtre
 _game_win.mainloop()
