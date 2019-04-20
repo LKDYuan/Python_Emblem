@@ -46,6 +46,8 @@ for layer in range(1, board_side):
 tile_types = ["#008800", "#008800", "#008800", "#0000bb"]  # Types [provisoire]
 unreachable = tile_types[3]  # Sur quels types de cases ne peut-on pas aller?
 start_tile_type = "#aaaa00"  # Type des cases de départ
+selected_tile = "#ffffff"  # Coloration des cases sélectionnées
+adj_tiles = "#ffff00"  # Coloration des cases adjacentes à la sélectionnée
 
 
 # Liste des personnages
@@ -83,6 +85,7 @@ def Rotate_board():
     # attend avant de tourner de nouveau
     if rotation:
         _gameboard.after(rotate_delay, Rotate_board)
+
     return
 
 
@@ -95,6 +98,8 @@ def Clear_board(clear_all):
                 tile.type = tile.color
             tile.Recolor()
 
+    return
+
 
 # ######
 # Objets
@@ -102,6 +107,7 @@ def Clear_board(clear_all):
 
 # Les cases
 class Tile:
+
     # A-t-on initié un mouvement pour un personnage?
     clicked = False
     # Compteur des cases parcourues lors d'un mouvement
@@ -109,6 +115,7 @@ class Tile:
 
     # Création de la case
     def __init__(self, layer, indice):
+
         # attributs qualitatifs de la case
         self.color = Tile.Tile_type()
         self.clicked = False
@@ -145,7 +152,7 @@ class Tile:
         # actions sur les cases
         _gameboard.tag_bind(self.gui, "<Button-1>", self.Cursor_click)
         _gameboard.tag_bind(self.gui, "<Enter>", self.Cursor_enter)
-        _gameboard.tag_bind(self.gui, "<Leave>", self.Cursor_leave)
+        _gameboard.tag_bind(self.gui, "<Leave>", self.Recolor)
 
         # création d'un personnage sur les cases de départ
         self.has_char = False
@@ -154,8 +161,11 @@ class Tile:
 
         self.Position()
 
+        return
+
     # Position de la case
     def Position(self):
+
         # distance au centre
         tmp_var = self.layer ** 2 + self.pos ** 2 - self.layer * self.pos
         self.center_d = tmp_var ** 0.5 * tl_size
@@ -184,23 +194,29 @@ class Tile:
         # affichage de la case sur le canevas
         _gameboard.coords(self.gui, self.disp)
 
+        return
+
     # Sommets d'une case hexagonale
     def Hex_points(self):
+
         tmp_l = []
         for pt in range(6):
             tmp_var = pt * pi / 3 - pi / 6 + rotate
             tmp_l.append([self.x + tl_side * cos(tmp_var),
                           self.y + tl_side * sin(tmp_var)])
+
         return tmp_l
 
     # Couleurs d'un case [provisoire]
     def Tile_type():
+
         return choice(tile_types)
 
     # Lorsqu'une case est cliquée
     def Cursor_click(self, mouse):
+
         # rétablir la couleur des cases à la fin d'un mouvement
-        if Tile.clicked and self.type == "#ffffff":
+        if Tile.clicked and self.type == selected_tile:
             Clear_board(True)
 
             # déplacement du personnage à la case d'arrivée
@@ -219,9 +235,12 @@ class Tile:
             self.mvt_distance = 0
             self.Reachable_tiles()
 
+        return
+
     # Cases adjacentes à une case sélectionnée [à peaufiner]
     def Reachable_tiles(self):
-        self.type = "#ffffff"
+
+        self.type = selected_tile
         _gameboard.itemconfig(self.gui, fill=self.type)
         Clear_board(False)
 
@@ -272,27 +291,41 @@ class Tile:
                         if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos + 1):
                             tile.Reachable()
 
+        return
+
     # Cette case adjacente est-elle libre?
     def Reachable(self):
-        if self.type != unreachable and self.type != "#ffffff" and not self.has_char:
+
+        if self.type != unreachable and self.type != selected_tile and not self.has_char:
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui, fill="#ffff00")
+            _gameboard.itemconfig(self.gui, fill=adj_tiles)
+
         return
 
     # Les autres cases reprennent leur couleur d'origine
-    def Recolor(self):
+    def Recolor(self, mouse=0):
+
         if not self.tmp_reachable:
             _gameboard.itemconfig(self.gui, fill=self.type)
 
+        return
+
     # Lorsque la souris est au-dessus d'une case
     def Cursor_enter(self, mouse):
+
+        # si un mouvement a été commencé, continuer à sélectionner des cases
         if self.tmp_reachable:
+            # Le mouvement ne peut pas être supérieur aux points de mouvement
             Tile.mvt_count += 1
             self.mvt_distance = Tile.mvt_count
             if Tile.mvt_count <= Tile.tmp_tile.char.mvt_range:
                 self.Reachable_tiles()
-        elif self.type == "#ffffff":
+
+        # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
+        elif self.type == selected_tile:
             Tile.mvt_count = self.mvt_distance
+
+            # désélection des cases plus loin dans la trajectoire
             for layer in gameboard:
                 for tile in layer:
                     try:
@@ -302,48 +335,83 @@ class Tile:
                             _gameboard.itemconfig(self.gui, fill=self.type)
                     except AttributeError:
                         pass
+
+            # calcul des cases adjacentes à la nouvelle
             self.Reachable_tiles()
+
+        # si un mouvement n'a pas été commencé, blanchir la case
         else:
             tmp_color = self.color.replace("00", "77")
             _gameboard.itemconfig(self.gui, fill=tmp_color)
 
-    # Lorsque la souris n'est plus au-dessus d'une case
-    def Cursor_leave(self, mouse):
-        _gameboard.itemconfig(self.gui, fill=self.type)
+        return
 
+    # Les cases peuvent contenir des personnages!
     class Character:
+
+        # Attributs de chaque personnage
         def __init__(self, tile):
+
+            # la case contient effectivement un personnage
+            tile.has_char = True
+            # le personnage appartient effectivement à une case
             self.tile = tile
-            self.tile.has_char = True
+
+            # nature des personnages [provisoire]
+            # qui est-ce?
             self.char = choice(char_types)
+            # quel est son déplacement?
             self.mvt_range = choice(mvt_types)
+
+            # représentation graphique du personnage [provisoire - images]
             self.gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
                                                    fill=self.char)
-            _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
-            _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
-            _gameboard.tag_bind(self.gui, "<Leave>", tile.Cursor_leave)
+            # affichage du déplacement du personnage [provisoire]
             self.txt = _gameboard.create_text(0, 0, text=self.mvt_range,
                                               fill="#7fffff")
 
+            # actions sur les personnages
+            _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
+            _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
+            _gameboard.tag_bind(self.gui, "<Leave>", tile.Recolor)
+
+            return
+
+        # Position du personnage
+        def Position(self):
+
+            # Position du personnage en soit [provisoire]
+            _gameboard.coords(self.gui, self.tile.x - 0.15 * tl_size,
+                              self.tile.disp_y - space,
+                              self.tile.x + 0.15 * tl_size,
+                              self.tile.disp_y)
+
+            # Position du déplacement du personnage [provisoire]
+            _gameboard.coords(self.txt, self.tile.x,
+                              self.tile.disp_y - space / 2)
+
+            return
+
+        # Bouger un personnage à une case
         def Move(self, tile):
+
+            # on transfère le personnage entre cases de départ et d'arrivée
             tmp = self.tile
             tmp.has_char = False
             del tmp.char
             tile.char = self
             self.tile = tile
             self.tile.has_char = True
+
+            # mise à jour des actions sur le personnage (nouvelle case)
             _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
             _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
-            _gameboard.tag_bind(self.gui, "<Leave>", tile.Cursor_leave)
+            _gameboard.tag_bind(self.gui, "<Leave>", tile.Recolor)
+
+            # mise à jour de la position du personnage sur le canevas
             self.Position()
 
-        def Position(self):
-            _gameboard.coords(self.gui, self.tile.x - 0.15 * tl_size,
-                              self.tile.disp_y - space,
-                              self.tile.x + 0.15 * tl_size,
-                              self.tile.disp_y)
-            _gameboard.coords(self.txt, self.tile.x,
-                              self.tile.disp_y - space / 2)
+            return
 
 
 # ###################
@@ -363,6 +431,8 @@ if rotation:
 for layer in gameboard:
     for tile in range(len(layer)):
         layer[tile] = Tile(gameboard.index(layer), tile)
+
+# Création des personnages
 for layer in gameboard:
     for tile in layer:
         if tile.has_char:
