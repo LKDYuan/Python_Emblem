@@ -108,6 +108,8 @@ def Clear_board(clear_all):
 # Les cases
 class Tile:
 
+    # Combien de cases y a-t-il?
+    tiles_count = 0
     # A-t-on initié un mouvement pour un personnage?
     clicked = False
     # Compteur des cases parcourues lors d'un mouvement
@@ -131,6 +133,8 @@ class Tile:
             self.side = 0
         # index
         self.indice = indice
+        self.tag = float(Tile.tiles_count)
+        Tile.tiles_count += 1
         try:
             self.pos = indice % layer
         except ZeroDivisionError:
@@ -147,12 +151,13 @@ class Tile:
         self.type = self.color
 
         # représentation graphique de la case
-        self.gui = _gameboard.create_polygon(0, 0, width=0, fill=self.type)
+        self.gui = _gameboard.create_polygon(0, 0, width=0, fill=self.type,
+                                             tag=self.tag)
 
         # actions sur les cases
-        _gameboard.tag_bind(self.gui, "<Button-1>", self.Cursor_click)
-        _gameboard.tag_bind(self.gui, "<Enter>", self.Cursor_enter)
-        _gameboard.tag_bind(self.gui, "<Leave>", self.Recolor)
+        _gameboard.tag_bind(self.tag, "<Button-1>", self.Cursor_click)
+        _gameboard.tag_bind(self.tag, "<Enter>", self.Cursor_enter)
+        _gameboard.tag_bind(self.tag, "<Leave>", self.Recolor)
 
         # création d'un personnage sur les cases de départ
         self.has_char = False
@@ -365,15 +370,12 @@ class Tile:
 
             # représentation graphique du personnage [provisoire - images]
             self.gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
-                                                   fill=self.char)
+                                                   fill=self.char,
+                                                   tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
             self.txt = _gameboard.create_text(0, 0, text=self.mvt_range,
-                                              fill="#7fffff")
-
-            # actions sur les personnages
-            _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
-            _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
-            _gameboard.tag_bind(self.gui, "<Leave>", tile.Recolor)
+                                              fill="#7fffff",
+                                              tag=tile.tag)
 
             return
 
@@ -404,9 +406,8 @@ class Tile:
             self.tile.has_char = True
 
             # mise à jour des actions sur le personnage (nouvelle case)
-            _gameboard.tag_bind(self.gui, "<Button-1>", tile.Cursor_click)
-            _gameboard.tag_bind(self.gui, "<Enter>", tile.Cursor_enter)
-            _gameboard.tag_bind(self.gui, "<Leave>", tile.Recolor)
+            _gameboard.itemconfig(self.gui, tag=tile.tag)
+            _gameboard.itemconfig(self.txt, tag=tile.tag)
 
             # mise à jour de la position du personnage sur le canevas
             self.Position()
