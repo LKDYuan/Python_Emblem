@@ -48,6 +48,7 @@ unreachable = tile_types[3]  # Sur quels types de cases ne peut-on pas aller?
 start_tile_type = "#aaaa00"  # Type des cases de départ
 selected_tile = "#ffffff"  # Coloration des cases sélectionnées
 adj_tiles = "#ffff00"  # Coloration des cases adjacentes à la sélectionnée
+enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 
 
 # Liste des personnages
@@ -323,8 +324,12 @@ class Tile:
             # Le mouvement ne peut pas être supérieur aux points de mouvement
             Tile.mvt_count += 1
             self.mvt_distance = Tile.mvt_count
-            if Tile.mvt_count <= Tile.tmp_tile.char.mvt_range:
+            if self.mvt_distance < Tile.tmp_tile.char.mvt_range:
                 self.Reachable_tiles()
+            elif self.mvt_distance == Tile.tmp_tile.char.mvt_range:
+                self.type = selected_tile
+                Clear_board(False)
+                self.tmp_reachable = True
 
         # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
         elif self.type == selected_tile:
