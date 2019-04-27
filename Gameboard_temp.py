@@ -23,7 +23,7 @@ _game_win.title("Honey Emblem")  # nom du jeu
 vert_scale = 0.5  # facteur d'étirement vertical (effet 3D) [modifiable]
 win_width = min((scrn_h * 19 / 20) / vert_scale, scrn_w)  # largeur du canevas
 space = win_width / 20  # espace vide au-dessus du plateau (effet 3D)
-win_height = win_width * vert_scale + space
+win_height = win_width * vert_scale + space  # hauteur du canevas
 center = win_width / 2  # case du milieu (référentiel)
 board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable]
 
