@@ -21,9 +21,10 @@ scrn_w = _game_win.winfo_screenwidth() - 20  # largeur de l'écran
 scrn_h = _game_win.winfo_screenheight() - 20  # longueur de l'écran
 _game_win.title("Honey Emblem")  # nom du jeu
 vert_scale = 0.5  # facteur d'étirement vertical (effet 3D) [modifiable]
-win_dim = min((scrn_h * 19 / 20) / vert_scale, scrn_w)  # dimensions maximales
-space = win_dim / 20  # espace vide au-dessus du plateau (effet 3D)
-center = win_dim / 2  # case du milieu (référentiel)
+win_width = min((scrn_h * 19 / 20) / vert_scale, scrn_w)  # largeur du canevas
+space = win_width / 20  # espace vide au-dessus du plateau (effet 3D)
+win_height = win_width * vert_scale + space
+center = win_width / 2  # case du milieu (référentiel)
 board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable]
 
 
@@ -34,7 +35,7 @@ rotation = False  # Le plateau tourne-t-il?
 
 
 # Dimensions des cases
-tl_side = win_dim / (2 * (3 * board_side ** 2 - 3 * board_side + 2) ** 0.5)
+tl_side = win_width / (2 * (3 * board_side ** 2 - 3 * board_side + 2) ** 0.5)
 tl_size = tl_side * (3 ** 0.5)
 
 # Liste des cases dans le plateau
@@ -425,8 +426,8 @@ class Tile:
 # ###################
 
 # Canevas sur lequel se déroulera le jeu
-_gameboard = tk.Canvas(_game_win, width=win_dim,
-                       height=win_dim * vert_scale + space, bg="#000000")
+_gameboard = tk.Canvas(_game_win, width=win_width,
+                       height=win_height, bg="#000000")
 _gameboard.pack()
 
 # Tourner le plateau [provisoire]
