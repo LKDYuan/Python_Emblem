@@ -7,7 +7,7 @@
 # #########
 
 import tkinter as tk
-from math import cos, sin, asin, pi
+from math import cos, sin, asin, pi, ceil
 from random import choice
 
 
@@ -101,6 +101,43 @@ def Clear_board(clear_all):
             tile.Recolor()
 
     return
+
+
+# Permet de couper un str en parties de longueur égale
+def Slice_str(string, slice_len):
+
+    str_l = []
+    for char in range(0, len(string), slice_len):
+        str_l.append(string[char:char+slice_len])
+
+    return str_l
+
+
+# Change la couleur de quelque chose
+def Change(color, change_type, int_col=1):
+
+    # liste temporaire des valeurs de R, G et B
+    tmp_l = Slice_str(color[1:], 2)
+
+    # calcul de la nouvelle couleur
+    new_color = "#"
+    if change_type != "Opp":
+        tmp_l2 = Slice_str(change_type[1:], 2)
+
+    # il faut le faire pour chaque couleur primaire
+    for i in range(3):
+        hex_val = int("0x" + tmp_l[i], 16)
+
+        # couleur inverse
+        if change_type == "Opp":
+            new_color += format(0xff - hex_val, "#04x")[2:]
+
+        # rajout d'une couleur (par exemple, blanchir case)
+        else:
+            hex_val2 = int("0x" + tmp_l2[i], 16)
+            new_color += format(ceil((hex_val + int_col * hex_val2) / (1 + int_col) - 0.5), "#04x")[2:]
+
+    return new_color
 
 
 # ######
@@ -305,7 +342,7 @@ class Tile:
 
         if self.type != unreachable and self.type != selected_tile and not self.has_char:
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui, fill=adj_tiles)
+            _gameboard.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2.5))
 
         return
 
@@ -350,9 +387,9 @@ class Tile:
             # calcul des cases adjacentes à la nouvelle
             self.Reachable_tiles()
 
-        # si un mouvement n'a pas été commencé, blanchir la case
+        # dans les autres cas, blanchir la case
         else:
-            tmp_color = self.color.replace("00", "77")
+            tmp_color = Change(self.color, "#ffffff", 0.5)
             _gameboard.itemconfig(self.gui, fill=tmp_color)
 
         return
@@ -380,7 +417,7 @@ class Tile:
                                                    tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
             self.txt = _gameboard.create_text(0, 0, text=self.mvt_range,
-                                              fill="#7fffff",
+                                              fill=Change(self.char, "Opp"),
                                               tag=tile.tag)
 
             return
