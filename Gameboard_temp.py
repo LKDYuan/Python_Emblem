@@ -44,7 +44,7 @@ for layer in range(1, board_side):
     gameboard.append(layer * 6 * [0])
 
 # Caractéristiques des cases
-tile_types = ["#008800", "#008800", "#008800", "#0000bb"]  # Types [provisoire]
+tile_types = ["#008800", "#aa0000", "#008800", "#0000bb"]  # Types [provisoire]
 unreachable = tile_types[3]  # Sur quels types de cases ne peut-on pas aller?
 start_tile_type = "#aaaa00"  # Type des cases de départ
 selected_tile = "#ffffff"  # Coloration des cases sélectionnées
@@ -342,7 +342,7 @@ class Tile:
 
         if self.type != unreachable and self.type != selected_tile and not self.has_char:
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2.5))
+            _gameboard.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
 
         return
 
