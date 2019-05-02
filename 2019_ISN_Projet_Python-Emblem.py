@@ -7,7 +7,7 @@
 # #########
 
 import tkinter as tk
-from math import cos, sin, asin, pi, ceil
+from math import cos, sin, asin, pi
 from random import choice
 
 
@@ -17,12 +17,13 @@ from random import choice
 
 # Dimensions du plateau de jeu
 _game_win = tk.Tk()  # fenêtre principale
+_game_win.state("zoomed")  # plein écran (sur Windows)
 scrn_w = _game_win.winfo_screenwidth() - 20  # largeur de l'écran
 scrn_h = _game_win.winfo_screenheight() - 20  # longueur de l'écran
-_game_win.title("Honey Emblem")  # nom du jeu
+_game_win.title("Python Emblem")  # nom du jeu
 vert_scale = 0.5  # facteur d'étirement vertical (effet 3D) [modifiable]
-win_width = min((scrn_h * 19 / 20) / vert_scale, scrn_w)  # largeur du canevas
-space = win_width / 20  # espace vide au-dessus du plateau (effet 3D)
+win_width = min(scrn_h / vert_scale, scrn_w) * 4 / 5  # largeur du canevas
+space = win_width / 9  # espace vide au-dessus du plateau (effet 3D)
 win_height = win_width * vert_scale + space  # hauteur du canevas
 center = win_width / 2  # case du milieu (référentiel)
 board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable]
@@ -31,7 +32,7 @@ board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable
 # Paramètres de la rotation du plateau
 rotate = 0.75  # rotation du plateau en radians [modifiable]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
-rotation = False  # Le plateau tourne-t-il?
+rotation = True  # Le plateau tourne-t-il?
 
 
 # Dimensions des cases
@@ -59,7 +60,7 @@ characters["God"] = {"ATK": 999999999999999, "HP": 1, "DEF": 99999999999999999}
 
 # Caractéristiques des personnages [provisoire, il faut remplir Liste ^]
 char_types = ["#eeeeee", "#222222"]
-mvt_types = range(2, 6)  # ! Attention, la limite supérieure est Off by One !
+mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 
 
 # #########
@@ -86,7 +87,7 @@ def Create_tiles():
 
 
 # Création des personnages
-def Create_char() :
+def Create_char():
     for layer in gameboard:
         for tile in layer:
             if tile.has_char:
@@ -173,8 +174,8 @@ def Change(color, change_type, int_col=1):
 
         # rajout d'une couleur (par exemple, blanchir case)
         else:
-            hex_val2 = int("0x" + tmp_l2[i], 16)
-            new_color += format(ceil((hex_val + int_col * hex_val2) / (1 + int_col) - 0.5), "#04x")[2:]
+            hex_val = int_col * int("0x" + tmp_l2[i], 16) + hex_val
+            new_color += format(round(hex_val / (1 + int_col)), "#04x")[2:]
 
     return new_color
 
@@ -198,7 +199,6 @@ class Tile:
 
         # attributs qualitatifs de la case
         self.color = Tile.Tile_type()
-        self.clicked = False
         self.tmp_reachable = False
 
         # coordonnées de la case
@@ -356,22 +356,26 @@ class Tile:
                     for tile in gameboard[self.layer + 1]:
                         if tile.side == self.side and tile.pos <= 1:
                             tile.Reachable()
-                        if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
+                        if (tile.side == (self.side - 1) % 6 and
+                           tile.pos == tile.layer - 1):
                             tile.Reachable()
 
             # pour les côtés d'un couche
             else:
                 # cases sur la couche du dessous
                 for tile in gameboard[self.layer - 1]:
-                    if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos - 1):
+                    if (tile.side == self.side and
+                       (tile.pos == self.pos or tile.pos == self.pos - 1)):
                         tile.Reachable()
-                    if self.pos % tile.layer == 0 and tile.side == (self.side + 1) % 6 and tile.pos == 0:
+                    if (self.pos % tile.layer == 0 and
+                       tile.side == (self.side + 1) % 6 and tile.pos == 0):
                         tile.Reachable()
 
                 # cases sur la couche du dessus (sauf pour la dernière couche)
                 if self.layer != board_side - 1:
                     for tile in gameboard[self.layer + 1]:
-                        if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos + 1):
+                        if (tile.side == self.side and
+                           (tile.pos == self.pos or tile.pos == self.pos + 1)):
                             tile.Reachable()
 
         return
@@ -379,9 +383,11 @@ class Tile:
     # Cette case adjacente est-elle libre?
     def Reachable(self):
 
-        if self.type != unreachable and self.type != selected_tile and not self.has_char:
+        if (self.type != unreachable and self.type != selected_tile and
+           not self.has_char):
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
+            _gameboard.itemconfig(self.gui,
+                                  fill=Change(self.type, adj_tiles, 2))
 
         return
 
@@ -466,13 +472,13 @@ class Tile:
 
             # Position du personnage en soit [provisoire]
             _gameboard.coords(self.gui, self.tile.x - 0.15 * tl_size,
-                              self.tile.disp_y - space,
+                              self.tile.disp_y - tl_side,
                               self.tile.x + 0.15 * tl_size,
                               self.tile.disp_y)
 
             # Position du déplacement du personnage [provisoire]
             _gameboard.coords(self.txt, self.tile.x,
-                              self.tile.disp_y - space / 2)
+                              self.tile.disp_y - tl_side / 2)
 
             return
 
@@ -512,6 +518,10 @@ Create_tiles()
 
 # Création des personnages
 Create_char()
+
+# Affichage du titre [provisoire]
+'''_gameboard.create_text(win_width/2, win_height/2, text="Python Emblem",
+                       font=("times new roman", 100), fill="#ffffff")'''
 
 # Création de la fenêtre
 _game_win.mainloop()
