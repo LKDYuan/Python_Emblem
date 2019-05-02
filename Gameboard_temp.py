@@ -516,5 +516,6 @@ Create_char()
 # Création de la fenêtre
 _game_win.mainloop()
 
-#créer le titre
-_gameboard.create_text((win_width/2, win_height/2), text = "Python Emblem", font = ("times new roman", 100), fill = "#ffffff")
+# Affichage du titre [provisoire]
+_gameboard.create_text(win_width/2, win_height/2, text="Python Emblem",
+                       font=("times new roman", 100), fill="#ffffff")
