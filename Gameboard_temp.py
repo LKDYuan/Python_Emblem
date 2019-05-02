@@ -7,7 +7,7 @@
 # #########
 
 import tkinter as tk
-from math import cos, sin, asin, pi, ceil
+from math import cos, sin, asin, pi
 from random import choice
 
 
@@ -31,7 +31,7 @@ board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable
 # Paramètres de la rotation du plateau
 rotate = 0.75  # rotation du plateau en radians [modifiable]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
-rotation = False  # Le plateau tourne-t-il?
+rotation = True  # Le plateau tourne-t-il?
 
 
 # Dimensions des cases
@@ -44,7 +44,7 @@ for layer in range(1, board_side):
     gameboard.append(layer * 6 * [0])
 
 # Caractéristiques des cases
-tile_types = ["#008800", "#aa0000", "#008800", "#0000bb"]  # Types [provisoire]
+tile_types = ["#008800", "#008800", "#008800", "#0000bb"]  # Types [provisoire]
 unreachable = tile_types[3]  # Sur quels types de cases ne peut-on pas aller?
 start_tile_type = "#aaaa00"  # Type des cases de départ
 selected_tile = "#ffffff"  # Coloration des cases sélectionnées
@@ -65,6 +65,34 @@ mvt_types = range(2, 6)  # ! Attention, la limite supérieure est Off by One !
 # #########
 # Fonctions
 # #########
+
+#création du plateau
+def create_gameboard() :
+    global _gameboard
+    _gameboard = tk.Canvas(_game_win, width=win_width,
+                           height=win_width * vert_scale + space, bg="#000000")
+    _gameboard.pack()
+
+#création des cases
+def create_tiles() :
+    for layer in gameboard:
+        for tile in range(len(layer)):
+            layer[tile] = Tile(gameboard.index(layer), tile)
+
+#création des personnages
+def create_chara() :
+    for layer in gameboard:
+        for tile in layer:
+            if tile.has_char:
+                tile.char.Position()
+                _gameboard.tag_raise(tile.char.gui)
+                _gameboard.tag_raise(tile.char.txt) 
+
+
+# Tourner le plateau [provisoire]
+def rotation() :
+    if rotation:
+        _gameboard.after(rotate_delay, Rotate_board)
 
 # Rotation du plateau complet
 def Rotate_board():
@@ -101,43 +129,6 @@ def Clear_board(clear_all):
             tile.Recolor()
 
     return
-
-
-# Permet de couper un str en parties de longueur égale
-def Slice_str(string, slice_len):
-
-    str_l = []
-    for char in range(0, len(string), slice_len):
-        str_l.append(string[char:char+slice_len])
-
-    return str_l
-
-
-# Change la couleur de quelque chose
-def Change(color, change_type, int_col=1):
-
-    # liste temporaire des valeurs de R, G et B
-    tmp_l = Slice_str(color[1:], 2)
-
-    # calcul de la nouvelle couleur
-    new_color = "#"
-    if change_type != "Opp":
-        tmp_l2 = Slice_str(change_type[1:], 2)
-
-    # il faut le faire pour chaque couleur primaire
-    for i in range(3):
-        hex_val = int("0x" + tmp_l[i], 16)
-
-        # couleur inverse
-        if change_type == "Opp":
-            new_color += format(0xff - hex_val, "#04x")[2:]
-
-        # rajout d'une couleur (par exemple, blanchir case)
-        else:
-            hex_val2 = int("0x" + tmp_l2[i], 16)
-            new_color += format(ceil((hex_val + int_col * hex_val2) / (1 + int_col) - 0.5), "#04x")[2:]
-
-    return new_color
 
 
 # ######
@@ -342,7 +333,7 @@ class Tile:
 
         if self.type != unreachable and self.type != selected_tile and not self.has_char:
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
+            _gameboard.itemconfig(self.gui, fill=adj_tiles)
 
         return
 
@@ -387,9 +378,9 @@ class Tile:
             # calcul des cases adjacentes à la nouvelle
             self.Reachable_tiles()
 
-        # dans les autres cas, blanchir la case
+        # si un mouvement n'a pas été commencé, blanchir la case
         else:
-            tmp_color = Change(self.color, "#ffffff", 0.5)
+            tmp_color = self.color.replace("00", "77")
             _gameboard.itemconfig(self.gui, fill=tmp_color)
 
         return
@@ -417,7 +408,7 @@ class Tile:
                                                    tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
             self.txt = _gameboard.create_text(0, 0, text=self.mvt_range,
-                                              fill=Change(self.char, "Opp"),
+                                              fill="#7fffff",
                                               tag=tile.tag)
 
             return
@@ -463,26 +454,16 @@ class Tile:
 # ###################
 
 # Canevas sur lequel se déroulera le jeu
-_gameboard = tk.Canvas(_game_win, width=win_width,
-                       height=win_height, bg="#000000")
-_gameboard.pack()
+create_gameboard()
 
 # Tourner le plateau [provisoire]
-if rotation:
-    _gameboard.after(rotate_delay, Rotate_board)
+rotation()
 
 # Création des cases
-for layer in gameboard:
-    for tile in range(len(layer)):
-        layer[tile] = Tile(gameboard.index(layer), tile)
+create_tiles()
 
 # Création des personnages
-for layer in gameboard:
-    for tile in layer:
-        if tile.has_char:
-            tile.char.Position()
-            _gameboard.tag_raise(tile.char.gui)
-            _gameboard.tag_raise(tile.char.txt)
+create_chara()
 
 # Création de la fenêtre
 _game_win.mainloop()
