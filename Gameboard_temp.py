@@ -67,6 +67,45 @@ mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 # Fonctions
 # #########
 
+# Création du plateau
+def Create_gameboard():
+    global _gameboard
+    _gameboard = tk.Canvas(_game_win, width=win_width,
+                           height=win_width * vert_scale + space, bg="#000000")
+    _gameboard.pack()
+
+    return
+
+
+# Création des cases
+def Create_tiles():
+    for layer in gameboard:
+        for tile in range(len(layer)):
+            layer[tile] = Tile(gameboard.index(layer), tile)
+
+    return
+
+
+# Création des personnages
+def Create_char() :
+    for layer in gameboard:
+        for tile in layer:
+            if tile.has_char:
+                tile.char.Position()
+                _gameboard.tag_raise(tile.char.gui)
+                _gameboard.tag_raise(tile.char.txt)
+
+    return
+
+
+# Tourner le plateau [provisoire]
+def Rotate():
+    if rotation:
+        _gameboard.after(rotate_delay, Rotate_board)
+
+    return
+
+
 # Rotation du plateau complet
 def Rotate_board():
     global rotate
@@ -463,26 +502,19 @@ class Tile:
 # ###################
 
 # Canevas sur lequel se déroulera le jeu
-_gameboard = tk.Canvas(_game_win, width=win_width,
-                       height=win_height, bg="#000000")
-_gameboard.pack()
+Create_gameboard()
 
 # Tourner le plateau [provisoire]
-if rotation:
-    _gameboard.after(rotate_delay, Rotate_board)
+Rotate()
 
 # Création des cases
-for layer in gameboard:
-    for tile in range(len(layer)):
-        layer[tile] = Tile(gameboard.index(layer), tile)
+Create_tiles()
 
 # Création des personnages
-for layer in gameboard:
-    for tile in layer:
-        if tile.has_char:
-            tile.char.Position()
-            _gameboard.tag_raise(tile.char.gui)
-            _gameboard.tag_raise(tile.char.txt)
+Create_char()
 
 # Création de la fenêtre
 _game_win.mainloop()
+
+#créer le titre
+_gameboard.create_text((win_width/2, win_height/2), text = "Python Emblem", font = ("times new roman", 100), fill = "#ffffff")
