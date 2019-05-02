@@ -7,7 +7,7 @@
 # #########
 
 import tkinter as tk
-from math import cos, sin, asin, pi, ceil
+from math import cos, sin, asin, pi
 from random import choice
 
 
@@ -87,7 +87,7 @@ def Create_tiles():
 
 
 # Création des personnages
-def Create_char() :
+def Create_char():
     for layer in gameboard:
         for tile in layer:
             if tile.has_char:
@@ -174,8 +174,8 @@ def Change(color, change_type, int_col=1):
 
         # rajout d'une couleur (par exemple, blanchir case)
         else:
-            hex_val2 = int("0x" + tmp_l2[i], 16)
-            new_color += format(ceil((hex_val + int_col * hex_val2) / (1 + int_col) - 0.5), "#04x")[2:]
+            hex_val = int_col * int("0x" + tmp_l2[i], 16) + hex_val
+            new_color += format(round(hex_val / (1 + int_col)), "#04x")[2:]
 
     return new_color
 
@@ -356,22 +356,26 @@ class Tile:
                     for tile in gameboard[self.layer + 1]:
                         if tile.side == self.side and tile.pos <= 1:
                             tile.Reachable()
-                        if tile.side == (self.side - 1) % 6 and tile.pos == tile.layer - 1:
+                        if (tile.side == (self.side - 1) % 6 and
+                           tile.pos == tile.layer - 1):
                             tile.Reachable()
 
             # pour les côtés d'un couche
             else:
                 # cases sur la couche du dessous
                 for tile in gameboard[self.layer - 1]:
-                    if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos - 1):
+                    if (tile.side == self.side and
+                       (tile.pos == self.pos or tile.pos == self.pos - 1)):
                         tile.Reachable()
-                    if self.pos % tile.layer == 0 and tile.side == (self.side + 1) % 6 and tile.pos == 0:
+                    if (self.pos % tile.layer == 0 and
+                       tile.side == (self.side + 1) % 6 and tile.pos == 0):
                         tile.Reachable()
 
                 # cases sur la couche du dessus (sauf pour la dernière couche)
                 if self.layer != board_side - 1:
                     for tile in gameboard[self.layer + 1]:
-                        if tile.side == self.side and (tile.pos == self.pos or tile.pos == self.pos + 1):
+                        if (tile.side == self.side and
+                           (tile.pos == self.pos or tile.pos == self.pos + 1)):
                             tile.Reachable()
 
         return
@@ -379,9 +383,11 @@ class Tile:
     # Cette case adjacente est-elle libre?
     def Reachable(self):
 
-        if self.type != unreachable and self.type != selected_tile and not self.has_char:
+        if (self.type != unreachable and self.type != selected_tile and
+           not self.has_char):
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
+            _gameboard.itemconfig(self.gui,
+                                  fill=Change(self.type, adj_tiles, 2))
 
         return
 
@@ -513,9 +519,9 @@ Create_tiles()
 # Création des personnages
 Create_char()
 
+# Affichage du titre [provisoire]
+'''_gameboard.create_text(win_width/2, win_height/2, text="Python Emblem",
+                       font=("times new roman", 100), fill="#ffffff")'''
+
 # Création de la fenêtre
 _game_win.mainloop()
-
-# Affichage du titre [provisoire]
-_gameboard.create_text(win_width/2, win_height/2, text="Python Emblem",
-                       font=("times new roman", 100), fill="#ffffff")
