@@ -31,7 +31,7 @@ board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable
 # Paramètres de la rotation du plateau
 rotate = 0.75  # rotation du plateau en radians [modifiable]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
-rotation = False  # Le plateau tourne-t-il?
+rotation = True  # Le plateau tourne-t-il?
 
 
 # Dimensions des cases
@@ -515,3 +515,6 @@ Create_char()
 
 # Création de la fenêtre
 _game_win.mainloop()
+
+#créer le titre
+_gameboard.create_text((win_width/2, win_height/2), text = "Python Emblem", font = ("times new roman", 100), fill = "#ffffff")
