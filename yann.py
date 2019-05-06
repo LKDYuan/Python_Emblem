@@ -1,119 +1,153 @@
-#actions sur les boutons virtuels
-# Liste des personnages
-characters = {}
-characters["Marth"] = {"ATK": 25, "HP": 200, "DEF": 5},
-characters["God"] = {"ATK": 999999999999999, "HP": 1, "DEF": 99999999999999999}
 
-_gameboard.tag_bind(,,)
+from tkinter import *
 
-_gameboard.tag_bind(self.tag, "<Button-1>", self.Cursor_click)
-_gameboard.tag_bind(self.tag, "<Enter>", self.Cursor_enter)
-_gameboard.tag_bind(self.tag, "<Leave>", self.Recolor)
+fen = Tk()
+_gameboard = Canvas(fen, width = fen.winfo_screenwidth() - 20, height = fen.winfo_screenheight() - 20 )
 
-
-_gameboard.create_rectangle(, , , )
+def create_button(name, xm, ym) :  
+    XY = Coord_rec(xm, ym)
+    _gameboard.create_rectangle(XY)
+    _gameboard.create_text(xm, ym, text = name, anchor = center)
 
 
+def create_all_buttons() :
+    create_button(play)
+    create_button(close)
+    create_button(quit)
+    '''
+    create_button(settings)
+    create_button(options)
+    '''
+    create_button(rematch)
 
-.color.replace("00", "77")
 
-#crÃ©er une liste pourles positions individuelles
-
-
-
-#crÃ©er un dictionnaire pour les positions
-
-pos_but = {}
-pos_but["play"] = {["x0_p"] : 0.25*scrn_h-20, ["y0_p"] : 0.5*scrn_w-50, ["x1_p"] : 0.25*scrn_h+20, ["y1_p"] : 0.5*scrn_w+50}
-pos_but["quit"] = {["x0_q"] : 0.25*scrn_h+40, ["y0_q"] : 0.5*scrn_w-50, ["x1_q"] : 0.25*scrn_h+80, ["y1_q"] : 0.5*scrn_w+50}
-pos_but["quit2"] = {["x0_q2"] : 0.95*scrn_h+20, ["y0_q2"] : 0.9*scrn_w-20, ["x1_q2"] : 0.95*scrn_h+20, ["y1_q2"] : 0.9*scrn_w+20}
-pos_but["sett"] = {["x0_s"] : 0.25*scrn_h+100, ["y0_s"] : 0.5*scrn_w-50, ["x1_s"] : 0.25*scrn_h+140, ["y1_s"] : 0.5*scrn_w+50}
-pos_but["sett2"] = {["x0_s2"] : """Ã  complÃ©ter""", ["y0_s2"] : """Ã  complÃ©ter""", ["x1_s2"] : """Ã  complÃ©ter""", ["y1_s2"] : """Ã  complÃ©ter"""}
-pos_but["re"]= {["x0_r"] : 0.95*scrn_h-20, ["y0_r"] : 0.9*scrn_w-20, ["x1_r"] : 0.95*scrn_h+20, ["y1_r"] : 0.9*scrn_w+20}
-
-pos_txt = {}
-pos_txt["play"] = (pos_but["play"]["x0_p"] + pos_but["play"]["x1_p"])/2, (pos_but["play"]["y0_p"] + pos_but["play"]["y1_p"])/2, anchor = CENTER
-pos_txt["quit"] = 0.25*scrn_h+40, 0.5*scrn_w-50, 0.25*scrn_h+80, 0.5*scrn_w+50
-pos_txt["quit2"] = 0.95*scrn_h+20, 0.9*scrn_w-20, 0.95*scrn_h+20, 0.9*scrn_w+20
-pos_txt["sett"] = 0.25*scrn_h+100, 0.5*scrn_w-50, 0.25*scrn_h+140, 0.5*scrn_w+50
-pos_txt["sett2"] = """Ã  complÃ©ter"""
-pos_txt["re"]= 0.95*scrn_h-20, 0.9*scrn_w-20, 0.95*scrn_h+20, 0.9*scrn_w+20
-
+def select_buttons() :
+    if rotation :
+        _gameboard.delete(rematch)
+        _gameboard.delete(quit)
+        #_gameboard.delete(options)
+    elif rotation == false :
+        _gameboard.delet(play)
+        _gameboard.delete(close)
+        #_gameboard.delete(settings)
+        
+def select_actions() :
+    if name == "play" :
+        _gameboard.bind(self.tag,'<Button-1>', Click_play)
+    elif name == "close" or "quit" :
+        _gameboard.bind(self.tag,'<Button-1>', Click_quit)
+    elif name == "rematch" :
+        _gameboard.bind(self.tag,'<Button-1>', Click_rematch)
 
 class Button :
     
-     def __init__(self, name, x0, y0, x1, y1):
+    buttons_count = 0
+    
+    #fonctions qui décolorent et recolorent les boutons quand on passe dessus
+    def Enter(Event) :
+        _gameboard.configure(fill = "#222222")
+         
+    def Leave(Event) :
+        _gameboard.configure(fill = "#000000")
+     
+    #fonction pour jouer
+    def Click_play(Event) :
+        gameboard.delete(ALL)
+        rotation = False
+        create_gameboard()
+        rotation()
+        create_tiles()
+        create_chara()
+        _game_win.mainloop()
+     
+    #fonction pour fermer le jeu
+    def Click_quit(Event) :
+        rotation = True
+        _game_win.destroy()
+     
+    #fonction pour rejouer reset le terrain
+    def Click_rematch(Event) :
+        _gameboard.delete(ALL)
+        create_gameboard()
+        rotation()
+        create_tiles()
+        create_chara()
+        _game_win.mainloop()
+     
+    #fonction qui récupère x0, y0, x1, y1 à partir des coordonnées du milieu
+    def Coord_rec(xm, ym) :
+        x0 = xm - 40
+        y0 = ym + 20
+        x1 = xm + 40
+        y1 = ym -20
+            
+        return x0, y0, x1, y1         
+     
+    def __init__(self, name, xm, ym):
         
-         self.color = "#000000"
-         
-         play_but = _gameboard.create_rectangle(pos_but["play"]["x0_p"],["y0_p"]["x1_p"]["y1_p"])        
-         quit_but = _gameboard.create_rectangle(pos_but["quit"])
-         quit_but2 = _gameboard.create_rectangle(pos_but["quit2"])
-         sett_but = _gameboard.create_rectangle(pos_but["sett"])
-         sett_but2 = _gameboard.create_rectangle("""" Ã  complÃ©ter""")
-         re_but = _gameboard.create_rectangle(pos_but["re"])
-         
-         
-         txt_play = _gameboard.create_text((0.25*scrn_h-20, 0.5*scrn_w-50), text="Play", anchor = CENTER)
-         txt_play = _gameboard.create_text((400, 190), text="Play")
-         txt_play = _gameboard.create_text((400, 190), text="Quit")
-         txt_play = _gameboard.create_text((400, 190), text="Settings")
-         txt_play = _gameboard.create_text((400, 190), text="Rematch")
-        
+        # index
+        self.tag = float(Button.buttons_count)
+        Button.buttons_count += 1
         
         self.name = name
         self.fill = "#000000"
         self.outline = "#ffffff"
-        self.
+        self.anchor = center
         
+        #chaque bouton à un nom et les coordonnées de son milieu
+        play = Button("Play", win_width/2, 0.75*win_height)
+        close = Button("Close", win_width/2, 0.75*win_height + 60)
+        quit = Button("Quit", 0.8*win_width + 50, 0.625*win_height)
+        rematch = Button("Rematch", 0.8*win_width, 0.625*win_height)
+        '''
+        settings = Button("Settings", win_width/2, 0.75*win_height + 90)
+        options = ("Options", 0.0625*win_width, 0.625*win_height)
+        '''
+        
+        if self.name == "play" :
+            self.xm = win_width/2
+            self.ym = 0.75*win_height
+        elif self.name == "Close" :
+            self.xm = win_width/2
+            self.ym = 0.75*win_height + 60           
+        elif self.name == "Quit" :
+            self.xm = 0.8*win_width + 50
+            self.ym = 0.625*win_height  
+        elif self.name == "Rematch" :
+            self.xm = 0.8*win_width
+            self.ym = 0.625*win_height  
+        '''
+        #elif self.name == "Settings" :
+            self.xm = win_width/2
+            self.ym = 0.75*win_height + 90                     
+        elif self.name == "Options" :
+            self.xm = 0.0625*win_width
+            self.ym = 0.625*win_height             
+        '''
+        
+        #représentation graphique des boutons
+        Button.Create_rec(self.name, self.xm, self.ym) 
+        #_gameboard.create_rectangle(Coord_rec(self.xm, self.ym), fill = self.fill, outline = self.outline)
+        #Button.txt = _gameboard.create_text(xm, ym, text = self.name, anchor = self.anchor)
+    
+    #actions
+    _gameboard.bind(self,'<Enter>', Enter)
+    _gameboard.bind(self,'<Enter>', Enter)
+    _gameboard.bind(self,'<Leave>', Leave)
+    _gameboard.bind(txt,'<Leave>', Leave)
+    
+    """
+    elif name = "settings" or "settings_2" :
+    _gameboard.bind(self.tag,'<Button-1>', Click_)
+    _gameboard.bind(self.tag,'<Enter>', Click_)
+    _gameboard.bind(self.tag,'<Enter>', Click_)
+    _gameboard.bind(self.tag,'<Enter>', Click_)
+    _gameboard.bind(self.tag,'<Enter>', Click_)
+    """
 
-         
-         
-"""         
-     def Enter_but(Event) :
-         _gameboard.configure(fill = "#222222")
-         
-     def Leave_but(Event) :
-         _gameboard.configure(fill = "#000000")
-     
-     def Click_play_but(Event) :
-         _gameboard.delete(ALL)
-         rotation = False
-         create_gameboard()
-         rotation()
-         create_tiles()
-         create_chara()
-         _game_win.mainloop()
-     
-     def Click_quit_but(Event) :
-        rotation = True
-        _game_win.destroy()
-     
-     def Click_re_but(Event) :
-         _gameboard.delete(ALL)
-         create_gameboard()
-         rotation()
-         create_tiles()
-         create_chara()
-         _game_win.mainloop()
+#création des boutons
+create_all_buttons()
+select_buttons()
+select_actions()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
+fen.mainloop()
