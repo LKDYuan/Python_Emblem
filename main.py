@@ -31,9 +31,12 @@ is_player_1 = True  # à quel joueur de jouer?
 
 
 # Paramètres de la rotation du plateau
-rotate = 0.75  # rotation du plateau en radians [modifiable]
+original_rotate = pi / 2  # rotation d'origine du plateau [modifiable]
+rotate = original_rotate  # variable globale [ne pas modifier]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
-rotation = True  # Le plateau tourne-t-il?
+rotate_speed = 1.5  # vitesse d'un demi-tour [modifiable]
+rotate_multiplier = 0  # distance entre 2 mises à jour du plateau
+is_slowing = False  # mesure de la vitesse de rotation [ne pas modifier]
 
 
 # Dimensions des cases
@@ -104,17 +107,24 @@ def Create_char():
     return
 
 
-# Tourner le plateau [provisoire]
-def Rotate():
-    if rotation:
-        _gameboard.after(rotate_delay, Rotate_board)
-
-    return
-
-
 # Rotation du plateau complet
-def Rotate_board():
-    global rotate
+def Rotate_board(in_game=True):
+    global original_rotate, rotate, rotate_multiplier, is_slowing, rotation
+
+    rotation = True
+
+    if in_game:
+        if (rotate - original_rotate) % pi < pi / 2:
+            if is_slowing:
+                rotation, rotate_multiplier = False, 0
+            else:
+                rotate_multiplier += rotate_speed
+        else:
+            rotate_multiplier -= rotate_speed
+            is_slowing = True
+        rotate = (rotate + pi * rotate_multiplier / 1440) % (2 * pi)
+    else:
+        rotate = (rotate + pi / 1440) % (2 * pi)
 
     # mise à jour de la position de chaque case et de chaque personnage
     for layer in gameboard:
@@ -128,11 +138,9 @@ def Rotate_board():
                 _gameboard.tag_raise(tile.char.gui)
                 _gameboard.tag_raise(tile.char.txt)
 
-    rotate = (rotate + pi / 1440) % (2 * pi)
-
     # attend avant de tourner de nouveau
     if rotation:
-        _gameboard.after(rotate_delay, Rotate_board)
+        _gameboard.after(rotate_delay, Rotate_board, in_game)
 
     return
 
@@ -433,7 +441,6 @@ class Tile:
         # si un mouvement a été commencé, continuer à sélectionner des cases
         if self.type == selected_tile:
             Tile.mvt_count = self.mvt_distance
-            print(Tile.mvt_count)
 
             # désélection des cases plus loin dans la trajectoire
             for layer in gameboard:
@@ -557,14 +564,14 @@ class Tile:
 # Canevas sur lequel se déroulera le jeu
 Create_gameboard()
 
-# Tourner le plateau [provisoire]
-Rotate()
-
 # Création des cases
 Create_tiles()
 
 # Création des personnages
 Create_char()
+
+# Tourner le plateau [provisoire]
+_gameboard.after(rotate_delay, Rotate_board, False)
 
 # Affichage du titre [provisoire]
 '''_gameboard.create_text(win_width/2, win_height/2, text="Python Emblem",
