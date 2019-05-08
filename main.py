@@ -18,15 +18,16 @@ from random import choice
 # Dimensions du plateau de jeu
 _game_win = tk.Tk()  # fenêtre principale
 _game_win.state("zoomed")  # plein écran (sur Windows)
-scrn_w = _game_win.winfo_screenwidth() - 20  # largeur de l'écran
-scrn_h = _game_win.winfo_screenheight() - 20  # longueur de l'écran
+scrn_w = _game_win.winfo_screenwidth()  # largeur de l'écran
+scrn_h = _game_win.winfo_screenheight()  # longueur de l'écran
 _game_win.title("Python Emblem")  # nom du jeu
 vert_scale = 0.5  # facteur d'étirement vertical (effet 3D) [modifiable]
-win_width = min(scrn_h / vert_scale, scrn_w) * 4 / 5  # largeur du canevas
-space = win_width / 9  # espace vide au-dessus du plateau (effet 3D)
+space = scrn_h / vert_scale * 0.05  # espace vide au-dessus du plateau
+win_width = min(scrn_h / vert_scale - space, scrn_w)  # largeur du canevas
 win_height = win_width * vert_scale + space  # hauteur du canevas
 center = win_width / 2  # case du milieu (référentiel)
 board_side = 5  # nombre de cases sur un côté du plateau hexagonal [modifiable]
+is_player_1 = True  # à quel joueur de jouer?
 
 
 # Paramètres de la rotation du plateau
@@ -66,6 +67,11 @@ mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 # #########
 # Fonctions
 # #########
+
+# Arrêt du programme
+def Quit():
+    _game_win.destroy()
+
 
 # Création du plateau
 def Create_gameboard():
@@ -138,6 +144,8 @@ def Clear_board(clear_all):
             tile.tmp_reachable = False
             if clear_all:
                 tile.type = tile.color
+            if tile.has_char:
+                tile.char.adj_enemy = False
             tile.Recolor()
 
     return
@@ -194,58 +202,6 @@ class Tile:
     # Compteur des cases parcourues lors d'un mouvement
     mvt_count = 0
 
-    # Création de la case
-    def __init__(self, layer, indice):
-
-        # attributs qualitatifs de la case
-        self.color = Tile.Tile_type()
-        self.tmp_reachable = False
-
-        # coordonnées de la case
-        # couche
-        self.layer = layer
-        # côté
-        try:
-            self.side = indice // layer
-        except ZeroDivisionError:
-            self.side = 0
-        # index
-        self.indice = indice
-        self.tag = float(Tile.tiles_count)
-        Tile.tiles_count += 1
-        try:
-            self.pos = indice % layer
-        except ZeroDivisionError:
-            self.pos = 0
-
-        # différentiation des cases de départ
-        if self.layer == board_side - 1:
-            if self.side == 1 or self.side == 4:
-                self.color = start_tile_type
-            if (self.side == 2 or self.side == 5) and self.pos == 0:
-                self.color = start_tile_type
-
-        # coloration de la case
-        self.type = self.color
-
-        # représentation graphique de la case
-        self.gui = _gameboard.create_polygon(0, 0, width=0, fill=self.type,
-                                             tag=self.tag)
-
-        # actions sur les cases
-        _gameboard.tag_bind(self.tag, "<Button-1>", self.Cursor_click)
-        _gameboard.tag_bind(self.tag, "<Enter>", self.Cursor_enter)
-        _gameboard.tag_bind(self.tag, "<Leave>", self.Recolor)
-
-        # création d'un personnage sur les cases de départ
-        self.has_char = False
-        if self.color == start_tile_type:
-            self.char = Tile.Character(self)
-
-        self.Position()
-
-        return
-
     # Position de la case
     def Position(self):
 
@@ -295,33 +251,11 @@ class Tile:
 
         return choice(tile_types)
 
-    # Lorsqu'une case est cliquée
-    def Cursor_click(self, mouse):
-
-        # rétablir la couleur des cases à la fin d'un mouvement
-        if Tile.clicked and self.type == selected_tile:
-            Clear_board(True)
-
-            # déplacement du personnage à la case d'arrivée
-            Tile.tmp_tile.char.Move(self)
-
-            # réinitialisation des variables pour un nouveau mouvement
-            Tile.clicked = False
-            Tile.mvt_count = 0
-
-        # commencer le mouvement lorsqu'on sélectionne un personnage
-        elif self.has_char and not Tile.clicked:
-            Tile.clicked = True
-            Tile.tmp_tile = self
-
-            # compteur des cases parcourues (pour respecter le mouvement)
-            self.mvt_distance = 0
-            self.Reachable_tiles()
-
-        return
-
     # Cases adjacentes à une case sélectionnée [à peaufiner]
-    def Reachable_tiles(self):
+    def Reachable_tiles(self, only_enemies=False):
+
+        global temp_bool
+        temp_bool = only_enemies
 
         self.type = selected_tile
         _gameboard.itemconfig(self.gui, fill=self.type)
@@ -378,24 +312,118 @@ class Tile:
                            (tile.pos == self.pos or tile.pos == self.pos + 1)):
                             tile.Reachable()
 
+        del temp_bool
+
         return
 
     # Cette case adjacente est-elle libre?
     def Reachable(self):
 
-        if (self.type != unreachable and self.type != selected_tile and
-           not self.has_char):
+        global temp_bool
+
+        if self.has_char:
+            if self.char.player_1 != is_player_1:
+                self.char.adj_enemy = True
+                self.Reachable_enemy()
+        elif (self.type != unreachable and self.type != selected_tile and
+              not temp_bool):
             self.tmp_reachable = True
             _gameboard.itemconfig(self.gui,
                                   fill=Change(self.type, adj_tiles, 2))
 
         return
 
+    def Reachable_enemy(self):
+        _gameboard.itemconfig(self.gui,
+                              fill=Change(self.type, enemy_tile, 3))
+        _gameboard.itemconfig(self.char.gui,
+                              fill=Change(self.char.char, enemy_tile, 3))
+
     # Les autres cases reprennent leur couleur d'origine
-    def Recolor(self, mouse=0):
+    def Recolor(self):
 
         if not self.tmp_reachable:
             _gameboard.itemconfig(self.gui, fill=self.type)
+            if self.has_char:
+                _gameboard.itemconfig(self.char.gui, fill=self.char.char)
+
+        return
+
+    # Création de la case
+    def __init__(self, layer, indice):
+
+        # attributs qualitatifs de la case
+        self.color = Tile.Tile_type()
+        self.tmp_reachable = False
+
+        # coordonnées de la case
+        # couche
+        self.layer = layer
+        # côté
+        try:
+            self.side = indice // layer
+        except ZeroDivisionError:
+            self.side = 0
+        # index
+        self.indice = indice
+        self.tag = float(Tile.tiles_count)
+        Tile.tiles_count += 1
+        try:
+            self.pos = indice % layer
+        except ZeroDivisionError:
+            self.pos = 0
+
+        # différentiation des cases de départ
+        if self.layer == board_side - 1:
+            if self.side == 1 or self.side == 4:
+                self.color = start_tile_type
+            if (self.side == 2 or self.side == 5) and self.pos == 0:
+                self.color = start_tile_type
+
+        # coloration de la case
+        self.type = self.color
+
+        # représentation graphique de la case
+        self.gui = _gameboard.create_polygon(0, 0, width=0, fill=self.type,
+                                             tag=self.tag)
+
+        # actions sur les cases
+        _gameboard.tag_bind(self.tag, "<Button-1>", self.Cursor_click)
+        _gameboard.tag_bind(self.tag, "<Enter>", self.Cursor_enter)
+        _gameboard.tag_bind(self.tag, "<Leave>", self.Cursor_leave)
+
+        # création d'un personnage sur les cases de départ
+        self.has_char = False
+        if self.color == start_tile_type:
+            self.char = Tile.Character(self)
+
+        self.Position()
+
+        return
+
+    # Lorsqu'une case est cliquée
+    def Cursor_click(self, mouse):
+
+        # rétablir la couleur des cases à la fin d'un mouvement
+        if Tile.clicked and self.type == selected_tile:
+            Clear_board(True)
+
+            # déplacement du personnage à la case d'arrivée
+            Tile.tmp_tile.char.Move(self)
+
+            # réinitialisation des variables pour un nouveau mouvement
+            Tile.clicked = False
+            Tile.mvt_count = 0
+
+        # commencer le mouvement lorsqu'on sélectionne un personnage
+        elif self.has_char and not Tile.clicked:
+            if self.char.player_1 == is_player_1 and self.char.mvt_points != 0:
+                Tile.clicked = True
+                Tile.tmp_tile = self
+
+                # compteur des cases parcourues (pour respecter le mouvement)
+                self.mvt_distance = 0
+                self.Reachable_tiles()
 
         return
 
@@ -403,20 +431,9 @@ class Tile:
     def Cursor_enter(self, mouse):
 
         # si un mouvement a été commencé, continuer à sélectionner des cases
-        if self.tmp_reachable:
-            # Le mouvement ne peut pas être supérieur aux points de mouvement
-            Tile.mvt_count += 1
-            self.mvt_distance = Tile.mvt_count
-            if self.mvt_distance < Tile.tmp_tile.char.mvt_range:
-                self.Reachable_tiles()
-            elif self.mvt_distance == Tile.tmp_tile.char.mvt_range:
-                self.type = selected_tile
-                Clear_board(False)
-                self.tmp_reachable = True
-
-        # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
-        elif self.type == selected_tile:
+        if self.type == selected_tile:
             Tile.mvt_count = self.mvt_distance
+            print(Tile.mvt_count)
 
             # désélection des cases plus loin dans la trajectoire
             for layer in gameboard:
@@ -430,14 +447,35 @@ class Tile:
                         pass
 
             # calcul des cases adjacentes à la nouvelle
-            self.Reachable_tiles()
+            if Tile.mvt_count != Tile.tmp_tile.char.mvt_points:
+                self.Reachable_tiles()
+
+        # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
+        elif self.tmp_reachable:
+            # Le mouvement ne peut pas être supérieur aux points de mouvement
+            Tile.mvt_count += 1
+            self.mvt_distance = Tile.mvt_count
+            if self.mvt_distance < Tile.tmp_tile.char.mvt_points:
+                self.Reachable_tiles()
+            elif self.mvt_distance == Tile.tmp_tile.char.mvt_points:
+                self.Reachable_tiles(True)
+                self.tmp_reachable = True
 
         # dans les autres cas, blanchir la case
         else:
             tmp_color = Change(self.color, "#ffffff", 0.5)
             _gameboard.itemconfig(self.gui, fill=tmp_color)
+            if self.has_char:
+                if self.char.adj_enemy:
+                    self.Reachable_enemy()
 
         return
+
+    def Cursor_leave(self, mouse):
+        if self.has_char and self.char.adj_enemy:
+            pass
+        else:
+            self.Recolor()
 
     # Les cases peuvent contenir des personnages!
     class Character:
@@ -447,21 +485,28 @@ class Tile:
 
             # la case contient effectivement un personnage
             tile.has_char = True
+            self.adj_enemy = False
             # le personnage appartient effectivement à une case
             self.tile = tile
 
             # nature des personnages [provisoire]
+            # à quel camp appartient-il?
+            if tile.side == 1 or tile.side == 2:
+                self.player_1 = True
+            else:
+                self.player_1 = False
             # qui est-ce?
             self.char = choice(char_types)
             # quel est son déplacement?
             self.mvt_range = choice(mvt_types)
+            self.mvt_points = self.mvt_range
 
             # représentation graphique du personnage [provisoire - images]
             self.gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
                                                    fill=self.char,
                                                    tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
-            self.txt = _gameboard.create_text(0, 0, text=self.mvt_range,
+            self.txt = _gameboard.create_text(0, 0, text=self.mvt_points,
                                               fill=Change(self.char, "Opp"),
                                               tag=tile.tag)
 
@@ -479,6 +524,7 @@ class Tile:
             # Position du déplacement du personnage [provisoire]
             _gameboard.coords(self.txt, self.tile.x,
                               self.tile.disp_y - tl_side / 2)
+            _gameboard.itemconfig(self.txt, text=self.mvt_points)
 
             return
 
@@ -492,6 +538,7 @@ class Tile:
             tile.char = self
             self.tile = tile
             self.tile.has_char = True
+            self.mvt_points -= Tile.mvt_count
 
             # mise à jour des actions sur le personnage (nouvelle case)
             _gameboard.itemconfig(self.gui, tag=tile.tag)
@@ -524,4 +571,9 @@ Create_char()
                        font=("times new roman", 100), fill="#ffffff")'''
 
 # Création de la fenêtre
+_game_win.attributes("-fullscreen", 1)
+
+
+button = tk.Button(text='QUIT', command=Quit).pack()
+
 _game_win.mainloop()
