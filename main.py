@@ -61,8 +61,9 @@ enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 
 # Liste des personnages
 characters = {}
-characters["Marth"] = {"ATK": 25, "HP": 200, "DEF": 5},
-characters["God"] = {"ATK": 999999999999999, "HP": 1, "DEF": 99999999999999999}
+characters["Saber"] = {"ATK": 45, "HP": 200, "DEF": 5},
+characters["Lancer"] = {"ATK": 30, "HP": 400, "DEF": 5},
+characters["Tank"] = {"ATK": 5, "HP":600, "DEF":15}
 
 # Caractéristiques des personnages [provisoire, il faut remplir Liste ^]
 char_types = ["#eeeeee", "#222222"]
@@ -491,6 +492,16 @@ class Tile:
             # réinitialisation des variables pour un nouveau mouvement
             Tile.clicked = False
             Tile.mvt_count = 0
+        
+        # enlève des points de vie au personnage adjacent
+        elif self.char.adj_enemy :
+            if self.char.player_1 != is_player_1 :
+                self.char.HP = self.char.HP - self.char.ATK
+                if self.char.HP == 0 :
+                    _gmbrd.delete(self.char.gui)
+                    _gmbrd.delete(self.char.txt)
+                    self.has_char = False
+
 
         # commencer le mouvement lorsqu'on sélectionne un personnage
         elif self.has_char and not Tile.clicked:
@@ -570,7 +581,9 @@ class Tile:
             self.adj_enemy = False
             # le personnage appartient effectivement à une case
             self.tile = tile
-
+            self.HP = 100
+            self.ATK = 25
+            
             # nature des personnages [provisoire]
             # à quel camp appartient-il?
             if tile.side == 1 or tile.side == 2:
@@ -593,12 +606,13 @@ class Tile:
                                                fill=self.char,
                                                outline=self.out, tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
-            self.txt = _gmbrd.create_text(0, 0, text=self.mvt_points,
+            self.txt = _gmbrd.create_text(0, 0, text= self.HP,
                                           fill=Change(self.char, "Opp"),
                                           tag=tile.tag)
 
             return
-
+        
+        
         # Position du personnage
         def Position(self):
 
@@ -611,7 +625,7 @@ class Tile:
             # Position du déplacement du personnage [provisoire]
             _gmbrd.coords(self.txt, self.tile.x,
                           self.tile.disp_y - tl_side / 2)
-            _gmbrd.itemconfig(self.txt, text=self.mvt_points)
+            _gmbrd.itemconfig(self.txt, text=self.HP)
 
             return
 
@@ -654,9 +668,9 @@ Create_char()
 _gmbrd.after(rotate_delay, Rotate_board, False)
 
 # Affichage du titre [provisoire]
-_gmbrd.create_text(win_width/2, win_height/2, text="Python Emblem",
+"""_gmbrd.create_text(win_width/2, win_height/2, text="Python Emblem",
                    font=("times new roman", round(win_width / 8)),
-                   fill="#ffffff")
+                   fill="#ffffff")"""
 
 # Boutons pour quitter le programme [provisoire]
 button1 = tk.Button(text='QUIT', command=Quit).pack()
