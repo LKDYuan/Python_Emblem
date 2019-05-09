@@ -72,8 +72,9 @@ mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 
 # Liste des boutons
 buts_pos = {}
-buts_pos["Play"] = [win_width * 2 / 5, win_height * 3 / 4]
-buts_pos["Exit"] = [win_width * 3 / 5, win_height * 3 / 4]
+buts_pos["Play"] = [win_width * 5 / 13, win_height * 3 / 4]
+buts_pos["Exit"] = [win_width * 8 / 13, win_height * 3 / 4]
+buts_pos["Settings"] = [win_width * 1 / 2, win_height * 3 / 4]
 buts_pos["Quit"] = [win_width * 19 / 20, win_height * 59 / 60]
 buts_pos["Turn"] = [win_width * 1 / 20, win_height * 59 / 60]
 
@@ -161,6 +162,7 @@ def Create_gmbrd():
     # boutons sur le programme [provisoire]
     Button("Play")
     Button("Exit")
+    Button("Settings")
 
     return
 
@@ -318,7 +320,7 @@ class Button:
 
         # attributs qualitatifs des boutons
         self.name = name
-        self.fill = but_fill
+        self.fill = "#7f7f7f" if name == "Settings" else but_fill
         self.outl = but_outl
 
         # position du bouton
@@ -330,6 +332,9 @@ class Button:
         self.txt = _gmbrd.create_text(self.center, text=self.name,
                                       tag=self.name, fill=self.outl,
                                       font=("Georgia", round(win_width / 72)))
+
+        if name == "Settings":
+            return
 
         _gmbrd.tag_bind(self.name, "<Enter>", self.Cursor_enter)
         _gmbrd.tag_bind(self.name, "<Leave>", self.Cursor_leave)
