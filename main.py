@@ -6,6 +6,8 @@
 # Python Emblem
 # #########
 
+# drop.io
+
 import tkinter as tk
 from math import cos, sin, asin, pi
 from random import choice
@@ -17,11 +19,11 @@ from random import choice
 
 # Dimensions du plateau de jeu
 _game_win = tk.Tk()  # fenêtre principale
-_game_win.state("zoomed")  # plein écran (sur Windows)
+_game_win.attributes("-fullscreen", 1)  # plein écran (sur Mac, Linux)
 scrn_w = _game_win.winfo_screenwidth()  # largeur de l'écran
 scrn_h = _game_win.winfo_screenheight()  # longueur de l'écran
 _game_win.title("Python Emblem")  # nom du jeu
-vert_scale = 0.5  # facteur d'étirement vertical (effet 3D) [modifiable]
+vert_scale = 0.35  # facteur d'étirement vertical (effet 3D) [modifiable]
 space = scrn_h / vert_scale * 0.05  # espace vide au-dessus du plateau
 win_width = min(scrn_h / vert_scale - space, scrn_w)  # largeur du canevas
 win_height = win_width * vert_scale + space  # hauteur du canevas
@@ -31,10 +33,10 @@ is_player_1 = True  # à quel joueur de jouer?
 
 
 # Paramètres de la rotation du plateau
-original_rotate = pi / 2  # rotation d'origine du plateau [modifiable]
+original_rotate = 0.4  # rotation d'origine du plateau [modifiable]
 rotate = original_rotate  # variable globale [ne pas modifier]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
-rotate_speed = 1.5  # vitesse d'un demi-tour [modifiable]
+rotate_speed = 2  # vitesse d'un demi-tour [modifiable]
 rotate_multiplier = 0  # distance entre 2 mises à jour du plateau
 is_slowing = False  # mesure de la vitesse de rotation [ne pas modifier]
 
@@ -44,9 +46,9 @@ tl_side = win_width / (2 * (3 * board_side ** 2 - 3 * board_side + 2) ** 0.5)
 tl_size = tl_side * (3 ** 0.5)
 
 # Liste des cases dans le plateau
-gameboard = [[0]]
+gmbrd = [[0]]
 for layer in range(1, board_side):
-    gameboard.append(layer * 6 * [0])
+    gmbrd.append(layer * 6 * [0])
 
 # Caractéristiques des cases
 tile_types = ["#008800", "#aa0000", "#008800", "#0000bb"]  # Types [provisoire]
@@ -66,6 +68,14 @@ characters["God"] = {"ATK": 999999999999999, "HP": 1, "DEF": 99999999999999999}
 char_types = ["#eeeeee", "#222222"]
 mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 
+# Liste des boutons
+buts_pos = {}
+buts_pos["Play"] = [win_width / 2, win_height * 3 / 4]
+
+# Caractéristiques des boutons
+but_fill = "#000000"
+but_outl = "#ffffff"
+
 
 # #########
 # Fonctions
@@ -73,36 +83,65 @@ mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 
 # Arrêt du programme
 def Quit():
+
     _game_win.destroy()
+
+    return
+
+
+def Other_player():
+    global is_player_1
+
+    is_player_1 = not is_player_1
+    for layer in gmbrd:
+        for tile in layer:
+            if tile.has_char:
+                tile.char.mvt_count = tile.char.mvt_range
+    Rotate_board()
+
+    return
+
+
+# À compléter
+def Play(event=0):
+    global rotation
+
+    rotation = False
+    print("Click")
+
+    return
 
 
 # Création du plateau
-def Create_gameboard():
-    global _gameboard
-    _gameboard = tk.Canvas(_game_win, width=win_width,
-                           height=win_width * vert_scale + space, bg="#000000")
-    _gameboard.pack()
+def Create_gmbrd():
+    global _gmbrd
+
+    _gmbrd = tk.Canvas(_game_win, width=win_width, height=win_height,
+                       bg="#000000")
+    _gmbrd.pack()
 
     return
 
 
 # Création des cases
 def Create_tiles():
-    for layer in gameboard:
+
+    for layer in gmbrd:
         for tile in range(len(layer)):
-            layer[tile] = Tile(gameboard.index(layer), tile)
+            layer[tile] = Tile(gmbrd.index(layer), tile)
 
     return
 
 
 # Création des personnages
 def Create_char():
-    for layer in gameboard:
+
+    for layer in gmbrd:
         for tile in layer:
             if tile.has_char:
                 tile.char.Position()
-                _gameboard.tag_raise(tile.char.gui)
-                _gameboard.tag_raise(tile.char.txt)
+                _gmbrd.tag_raise(tile.char.gui)
+                _gmbrd.tag_raise(tile.char.txt)
 
     return
 
@@ -111,43 +150,54 @@ def Create_char():
 def Rotate_board(in_game=True):
     global original_rotate, rotate, rotate_multiplier, is_slowing, rotation
 
+    # contrôle la quantité de rotation (pas trop tourner)
     rotation = True
 
+    # si c'est entre le tour de 2 joueurs, tourner d'1/2 tour
     if in_game:
+        # si on a tourné moins d'1/4 de tour, accélérer
         if (rotate - original_rotate) % pi < pi / 2:
+            # arrêt de la rotation après 1/2 tour
             if is_slowing:
-                rotation, rotate_multiplier = False, 0
+                rotation, rotate_multiplier, is_slowing = False, 0, False
+            # sinon (début du 1/2 tour), accélérer
             else:
                 rotate_multiplier += rotate_speed
+
+        # sinon, ralentir
         else:
             rotate_multiplier -= rotate_speed
             is_slowing = True
+
+        # mise à jour de la quantité de rotation du plateau
         rotate = (rotate + pi * rotate_multiplier / 1440) % (2 * pi)
+
+    # si on est sur l'écran d'accueil, rotation à vitesse constante
     else:
         rotate = (rotate + pi / 1440) % (2 * pi)
 
     # mise à jour de la position de chaque case et de chaque personnage
-    for layer in gameboard:
+    for layer in gmbrd:
         for tile in layer:
             tile.Position()
+
     # afficher les personnages devant les cases [à compléter pour perspective]
-    for layer in gameboard:
+    for layer in gmbrd:
         for tile in layer:
             if tile.has_char:
                 tile.char.Position()
-                _gameboard.tag_raise(tile.char.gui)
-                _gameboard.tag_raise(tile.char.txt)
 
     # attend avant de tourner de nouveau
     if rotation:
-        _gameboard.after(rotate_delay, Rotate_board, in_game)
+        _gmbrd.after(rotate_delay, Rotate_board, in_game)
 
     return
 
 
 # Rend aux cases leur couleur d'origine, avant la sélection
 def Clear_board(clear_all):
-    for layer in gameboard:
+
+    for layer in gmbrd:
         for tile in layer:
             tile.tmp_reachable = False
             if clear_all:
@@ -159,7 +209,7 @@ def Clear_board(clear_all):
     return
 
 
-# Permet de couper un str en parties de longueur égale
+# Permet de couper un texte en parties de longueur égale
 def Slice_str(string, slice_len):
 
     str_l = []
@@ -200,6 +250,27 @@ def Change(color, change_type, int_col=1):
 # Objets
 # ######
 
+# Les boutons
+class Button:
+
+    def Coord_but(center):
+        return [center[0] - win_width / 20, center[1] - win_width / 60,
+                center[0] + win_width / 20, center[1] + win_width / 60]
+
+    def __init__(self, name):
+
+        self.name = name
+        self.fill = but_fill
+        self.outl = but_outl
+        self.center = buts_pos[name]
+        self.pos = Button.Coord_but(self.center)
+
+        self.gui = _gmbrd.create_rectangle(self.pos, tag=self.name,
+                                           fill=self.fill, outline=self.outl)
+        self.txt = _gmbrd.create_text(self.center, text=self.name,
+                                      tag=self.name, fill=self.outl)
+
+
 # Les cases
 class Tile:
 
@@ -239,7 +310,7 @@ class Tile:
             self.disp.append(point[1] * vert_scale + space)
 
         # affichage de la case sur le canevas
-        _gameboard.coords(self.gui, self.disp)
+        _gmbrd.coords(self.gui, self.disp)
 
         return
 
@@ -266,18 +337,18 @@ class Tile:
         temp_bool = only_enemies
 
         self.type = selected_tile
-        _gameboard.itemconfig(self.gui, fill=self.type)
+        _gmbrd.itemconfig(self.gui, fill=self.type)
         Clear_board(False)
 
         # pour la case du centre
         if self.layer == 0:
-            for tile in gameboard[1]:
+            for tile in gmbrd[1]:
                 tile.Reachable()
 
         # pour les autres cases
         else:
             # cases adjacentes sur la même couche
-            for tile in gameboard[self.layer]:
+            for tile in gmbrd[self.layer]:
                 if tile.indice == (self.indice + 1) % (self.layer * 6):
                     tile.Reachable()
                 if tile.indice == (self.indice - 1) % (self.layer * 6):
@@ -287,7 +358,7 @@ class Tile:
             # pour les coins d'une couche
             if self.pos == 0:
                 # cases sur la couche du dessous
-                for tile in gameboard[self.layer - 1]:
+                for tile in gmbrd[self.layer - 1]:
                     if self.layer == 1:
                         tile.Reachable()
                     elif tile.side == self.side and tile.pos == 0:
@@ -295,7 +366,7 @@ class Tile:
 
                 # cases sur la couche du dessus (sauf pour la dernière couche)
                 if self.layer != board_side - 1:
-                    for tile in gameboard[self.layer + 1]:
+                    for tile in gmbrd[self.layer + 1]:
                         if tile.side == self.side and tile.pos <= 1:
                             tile.Reachable()
                         if (tile.side == (self.side - 1) % 6 and
@@ -305,7 +376,7 @@ class Tile:
             # pour les côtés d'un couche
             else:
                 # cases sur la couche du dessous
-                for tile in gameboard[self.layer - 1]:
+                for tile in gmbrd[self.layer - 1]:
                     if (tile.side == self.side and
                        (tile.pos == self.pos or tile.pos == self.pos - 1)):
                         tile.Reachable()
@@ -315,7 +386,7 @@ class Tile:
 
                 # cases sur la couche du dessus (sauf pour la dernière couche)
                 if self.layer != board_side - 1:
-                    for tile in gameboard[self.layer + 1]:
+                    for tile in gmbrd[self.layer + 1]:
                         if (tile.side == self.side and
                            (tile.pos == self.pos or tile.pos == self.pos + 1)):
                             tile.Reachable()
@@ -336,24 +407,22 @@ class Tile:
         elif (self.type != unreachable and self.type != selected_tile and
               not temp_bool):
             self.tmp_reachable = True
-            _gameboard.itemconfig(self.gui,
-                                  fill=Change(self.type, adj_tiles, 2))
+            _gmbrd.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
 
         return
 
     def Reachable_enemy(self):
-        _gameboard.itemconfig(self.gui,
-                              fill=Change(self.type, enemy_tile, 3))
-        _gameboard.itemconfig(self.char.gui,
-                              fill=Change(self.char.char, enemy_tile, 3))
+        _gmbrd.itemconfig(self.gui, fill=Change(self.type, enemy_tile, 3))
+        _gmbrd.itemconfig(self.char.gui,
+                          fill=Change(self.char.char, enemy_tile, 3))
 
     # Les autres cases reprennent leur couleur d'origine
     def Recolor(self):
 
         if not self.tmp_reachable:
-            _gameboard.itemconfig(self.gui, fill=self.type)
+            _gmbrd.itemconfig(self.gui, fill=self.type)
             if self.has_char:
-                _gameboard.itemconfig(self.char.gui, fill=self.char.char)
+                _gmbrd.itemconfig(self.char.gui, fill=self.char.char)
 
         return
 
@@ -392,13 +461,13 @@ class Tile:
         self.type = self.color
 
         # représentation graphique de la case
-        self.gui = _gameboard.create_polygon(0, 0, width=0, fill=self.type,
-                                             tag=self.tag)
+        self.gui = _gmbrd.create_polygon(0, 0, width=0, fill=self.type,
+                                         tag=self.tag)
 
         # actions sur les cases
-        _gameboard.tag_bind(self.tag, "<Button-1>", self.Cursor_click)
-        _gameboard.tag_bind(self.tag, "<Enter>", self.Cursor_enter)
-        _gameboard.tag_bind(self.tag, "<Leave>", self.Cursor_leave)
+        _gmbrd.tag_bind(self.tag, "<Button-1>", self.Cursor_click)
+        _gmbrd.tag_bind(self.tag, "<Enter>", self.Cursor_enter)
+        _gmbrd.tag_bind(self.tag, "<Leave>", self.Cursor_leave)
 
         # création d'un personnage sur les cases de départ
         self.has_char = False
@@ -443,13 +512,13 @@ class Tile:
             Tile.mvt_count = self.mvt_distance
 
             # désélection des cases plus loin dans la trajectoire
-            for layer in gameboard:
+            for layer in gmbrd:
                 for tile in layer:
                     try:
                         if tile.mvt_distance > self.mvt_distance:
                             del tile.mvt_distance
                             tile.type = tile.color
-                            _gameboard.itemconfig(self.gui, fill=self.type)
+                            _gmbrd.itemconfig(self.gui, fill=self.type)
                     except AttributeError:
                         pass
 
@@ -471,17 +540,23 @@ class Tile:
         # dans les autres cas, blanchir la case
         else:
             tmp_color = Change(self.color, "#ffffff", 0.5)
-            _gameboard.itemconfig(self.gui, fill=tmp_color)
+            _gmbrd.itemconfig(self.gui, fill=tmp_color)
             if self.has_char:
                 if self.char.adj_enemy:
                     self.Reachable_enemy()
 
         return
 
+    # Lorsque la souris entre dans une case
     def Cursor_leave(self, mouse):
+
+        # si c'est un ennemi qu'on peut attaquer
         if self.has_char and self.char.adj_enemy:
+            # faire des choses
             pass
+
         else:
+            # sinon, juste blanchir la case
             self.Recolor()
 
     # Les cases peuvent contenir des personnages!
@@ -502,6 +577,11 @@ class Tile:
                 self.player_1 = True
             else:
                 self.player_1 = False
+            # indication graphique tu camp
+            if self.player_1:
+                self.out = "#ff0000"
+            else:
+                self.out = "#00ff00"
             # qui est-ce?
             self.char = choice(char_types)
             # quel est son déplacement?
@@ -509,13 +589,13 @@ class Tile:
             self.mvt_points = self.mvt_range
 
             # représentation graphique du personnage [provisoire - images]
-            self.gui = _gameboard.create_rectangle(0, 0, 0, 0, width=0,
-                                                   fill=self.char,
-                                                   tag=tile.tag)
+            self.gui = _gmbrd.create_rectangle(0, 0, 0, 0, width=2,
+                                               fill=self.char,
+                                               outline=self.out, tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
-            self.txt = _gameboard.create_text(0, 0, text=self.mvt_points,
-                                              fill=Change(self.char, "Opp"),
-                                              tag=tile.tag)
+            self.txt = _gmbrd.create_text(0, 0, text=self.mvt_points,
+                                          fill=Change(self.char, "Opp"),
+                                          tag=tile.tag)
 
             return
 
@@ -523,15 +603,15 @@ class Tile:
         def Position(self):
 
             # Position du personnage en soit [provisoire]
-            _gameboard.coords(self.gui, self.tile.x - 0.15 * tl_size,
-                              self.tile.disp_y - tl_side,
-                              self.tile.x + 0.15 * tl_size,
-                              self.tile.disp_y)
+            _gmbrd.coords(self.gui, self.tile.x - 0.15 * tl_size,
+                          self.tile.disp_y - tl_side,
+                          self.tile.x + 0.15 * tl_size,
+                          self.tile.disp_y)
 
             # Position du déplacement du personnage [provisoire]
-            _gameboard.coords(self.txt, self.tile.x,
-                              self.tile.disp_y - tl_side / 2)
-            _gameboard.itemconfig(self.txt, text=self.mvt_points)
+            _gmbrd.coords(self.txt, self.tile.x,
+                          self.tile.disp_y - tl_side / 2)
+            _gmbrd.itemconfig(self.txt, text=self.mvt_points)
 
             return
 
@@ -548,8 +628,8 @@ class Tile:
             self.mvt_points -= Tile.mvt_count
 
             # mise à jour des actions sur le personnage (nouvelle case)
-            _gameboard.itemconfig(self.gui, tag=tile.tag)
-            _gameboard.itemconfig(self.txt, tag=tile.tag)
+            _gmbrd.itemconfig(self.gui, tag=tile.tag)
+            _gmbrd.itemconfig(self.txt, tag=tile.tag)
 
             # mise à jour de la position du personnage sur le canevas
             self.Position()
@@ -562,7 +642,7 @@ class Tile:
 # ###################
 
 # Canevas sur lequel se déroulera le jeu
-Create_gameboard()
+Create_gmbrd()
 
 # Création des cases
 Create_tiles()
@@ -571,16 +651,18 @@ Create_tiles()
 Create_char()
 
 # Tourner le plateau [provisoire]
-_gameboard.after(rotate_delay, Rotate_board, False)
+_gmbrd.after(rotate_delay, Rotate_board, False)
 
 # Affichage du titre [provisoire]
-'''_gameboard.create_text(win_width/2, win_height/2, text="Python Emblem",
-                       font=("times new roman", 100), fill="#ffffff")'''
+_gmbrd.create_text(win_width/2, win_height/2, text="Python Emblem",
+                   font=("times new roman", round(win_width / 8)),
+                   fill="#ffffff")
+
+# Boutons pour quitter le programme [provisoire]
+button1 = tk.Button(text='QUIT', command=Quit).pack()
+button2 = tk.Button(text='End turn', command=Other_player).pack()
+but_play = Button("Play")
+_gmbrd.tag_bind("Play", "<Button-1>", Play)
 
 # Création de la fenêtre
-_game_win.attributes("-fullscreen", 1)
-
-
-button = tk.Button(text='QUIT', command=Quit).pack()
-
 _game_win.mainloop()
