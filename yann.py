@@ -79,6 +79,7 @@ class Button :
         
         
         #chaque bouton à un nom et les coordonnées de son milieu
+        #solution possible : créer listes à la place de button
         play = Button("Play", win_width/2, 0.75*win_height)
         close = Button("Close", win_width/2, 0.75*win_height + 60)
         quit = Button("Quit", 0.8*win_width + 50, 0.625*win_height)
@@ -96,7 +97,8 @@ class Button :
         elif self.name == "Rematch" :
             self.xm = 0.8*win_width
             self.ym = 0.625*win_height
-        
+         
+    def create_button(self) :
         self.gui = _gameboard.create_rectangle(self.Coord_rec(self.xm, self.ym))
         self.txt = _gameboard.create_text(self.xm, self.ym, text = self.name, anchor = center)
         
@@ -115,9 +117,7 @@ class Button :
             _gameboard.bind(self.tag,'<Button-1>', Click_rematch)
         
         
-    def create_button(self) :
-        self.gui
-        self.txt
+
 
 
 
