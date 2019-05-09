@@ -2,16 +2,44 @@
 from tkinter import *
 
 fen = Tk()
-_gameboard = Canvas(fen, width = fen.winfo_screenwidth() - 20, height = fen.winfo_screenheight() - 20 )
+win_width = fen.winfo_screenwidth()
+win_height = fen.winfo_screenheight()
+_gameboard = Canvas(fen, width = win_width, height = win_height, bg="#7f7f7f")
+_gameboard.pack()
 
-"""
+
 def create_all_buttons() :
-    create_button()
-    create_button()
-    create_button()
-    create_button()
-"""
+    play.create_button()
+    quit.create_button()
+    close.create_button()
+    rematch.create_button()
+    '''
+#fonction pour jouer
+def Play(Event) :
+    _gameboard.delete(ALL)
+    rotation = False
+    create_gameboard()
+    rotation()
+    create_tiles()
+    create_chara()
+    _game_win.mainloop()'''
 
+#fonction pour fermer le jeu
+def Quit(Event) :
+    #rotation = True
+    fen.destroy()
+'''
+#fonction pour rejouer reset le terrain
+def Rematch(Event) :
+    _gameboard.delete(ALL)
+    create_gameboard()
+    rotation()
+    create_tiles()
+    create_chara()
+    _game_win.mainloop()
+'''
+
+"""
 def select_buttons() :
     if rotation :
         _gameboard.delete(rematch)
@@ -20,42 +48,22 @@ def select_buttons() :
     elif rotation == false :
         _gameboard.delet(play)
         _gameboard.delete(close)
-        #_gameboard.delete(settings)
+        #_gameboard.delete(settings)"""
+        
 
 class Button :
 
     buttons_count = 0
 
     #fonctions qui décolorent et recolorent les boutons quand on passe dessus
-    def Enter(Event) :
-        _gameboard.configure(fill = "#222222")
+    def Enter(self, Event) :
+        _gameboard.itemconfig(self.gui, fill = "#222222")
+    
+    def Leave(self, Event) :
+        _gameboard.itemconfig(self.gui, fill = "#000000")
 
-    def Leave(Event) :
-        _gameboard.configure(fill = "#000000")
 
-    #fonction pour jouer
-    def Click_play(Event) :
-        gameboard.delete(ALL)
-        rotation = False
-        create_gameboard()
-        rotation()
-        create_tiles()
-        create_chara()
-        _game_win.mainloop()
-
-    #fonction pour fermer le jeu
-    def Click_quit(Event) :
-        rotation = True
-        _game_win.destroy()
-
-    #fonction pour rejouer reset le terrain
-    def Click_rematch(Event) :
-        _gameboard.delete(ALL)
-        create_gameboard()
-        rotation()
-        create_tiles()
-        create_chara()
-        _game_win.mainloop()
+    
         
     #fonction qui récupère x0, y0, x1, y1 à partir des coordonnées du milieu
     def Coord_rec(xm, ym) :
@@ -66,26 +74,21 @@ class Button :
         
         return x0, y0, x1, y1
     
-    def __init__(self, name, xm, ym):
+    def __init__(self, name):
         
         # index
-        self.tag = float(Button.buttons_count)
         Button.buttons_count += 1
         
         self.name = name
         self.fill = "#000000"
         self.outline = "#ffffff"
-        self.anchor = center
         
         
         #chaque bouton à un nom et les coordonnées de son milieu
         #solution possible : créer listes à la place de button
-        play = Button("Play", win_width/2, 0.75*win_height)
-        close = Button("Close", win_width/2, 0.75*win_height + 60)
-        quit = Button("Quit", 0.8*win_width + 50, 0.625*win_height)
-        rematch = Button("Rematch", 0.8*win_width, 0.625*win_height)
+
         
-        if self.name == "play" :
+        if self.name == "Play" :
             self.xm = win_width/2
             self.ym = 0.75*win_height
         elif self.name == "Close" :
@@ -99,30 +102,27 @@ class Button :
             self.ym = 0.625*win_height
          
     def create_button(self) :
-        self.gui = _gameboard.create_rectangle(self.Coord_rec(self.xm, self.ym))
-        self.txt = _gameboard.create_text(self.xm, self.ym, text = self.name, anchor = center)
+        self.gui = _gameboard.create_rectangle(Button.Coord_rec(self.xm, self.ym), tag=self.name, outline=self.outline,fill=self.fill)
+        self.txt = _gameboard.create_text(self.xm, self.ym, text = self.name, anchor = "center", fill = self.outline, tag=self.name)
         
         #actions
-        _gameboard.bind(self.gui,'<Enter>', Enter)
-        _gameboard.bind(self.txt,'<Enter>', Enter)
-        _gameboard.bind(self.gui,'<Leave>', Leave)
-        _gameboard.bind(self.txt,'<Leave>', Leave)
-        
-    def select_actions(self) :
-        if self.name == "play" :
-            _gameboard.bind(self.tag,'<Button-1>', Click_play)
-        elif self.name == "close" or "quit" :
-            _gameboard.bind(self.tag,'<Button-1>', Click_quit)
-        elif self.name == "rematch" :
-            _gameboard.bind(self.tag,'<Button-1>', Click_rematch)
+        _gameboard.tag_bind(self.name,'<Enter>', self.Enter)
+        _gameboard.tag_bind(self.name,'<Leave>', self.Leave)
+
         
         
+play = Button("Play")
+close = Button("Close")
+quit = Button("Quit")
+rematch = Button("Rematch")
 
-
-
+#_gameboard.tag_bind("Play",'<Button-1>', Play)
+_gameboard.tag_bind("Quit",'<Button-1>', Quit)
+_gameboard.tag_bind("Close",'<Button-1>', Quit)
+#_gameboard.tag_bind("Rematch",'<Button-1>', Rematch)
 
 #création des boutons
-#create_all_buttons()
+create_all_buttons()
 #select_buttons()
 #select_actions()
-#fen.mainloop()
+fen.mainloop()
