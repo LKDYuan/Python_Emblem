@@ -34,11 +34,12 @@ is_player_1 = True  # à quel joueur de jouer?
 
 # Paramètres de la rotation du plateau
 original_rotate = 0.4  # rotation d'origine du plateau [modifiable]
-rotate = original_rotate  # variable globale [ne pas modifier]
+rotate = original_rotate  # variable globale de rotation [ne pas modifier]
 rotate_delay = 30  # temps en ms entre 2 mises à jour du plateau [modifiable]
 rotate_speed = 2  # vitesse d'un demi-tour [modifiable]
 rotate_multiplier = 0  # distance entre 2 mises à jour du plateau
 is_slowing = False  # mesure de la vitesse de rotation [ne pas modifier]
+rotation = True  # rotation au début [ne pas modifier]
 
 
 # Dimensions des cases
@@ -70,7 +71,10 @@ mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
 
 # Liste des boutons
 buts_pos = {}
-buts_pos["Play"] = [win_width / 2, win_height * 3 / 4]
+buts_pos["Play"] = [win_width * 2 / 5, win_height * 3 / 4]
+buts_pos["Exit"] = [win_width * 3 / 5, win_height * 3 / 4]
+buts_pos["Quit"] = [win_width * 19 / 20, win_height * 59 / 60]
+buts_pos["Turn"] = [win_width * 1 / 20, win_height * 59 / 60]
 
 # Caractéristiques des boutons
 but_fill = "#000000"
@@ -82,14 +86,20 @@ but_outl = "#ffffff"
 # #########
 
 # Arrêt du programme
-def Quit():
+def Quit(event=0):
 
-    _game_win.destroy()
+    _exit_win = tk.Toplevel(_game_win)
+    tk.Label(_exit_win, text="Arrêter le jeu ?"
+             ).grid(column=0, columnspan=2, row=0, padx=20, pady=20)
+    tk.Button(_exit_win, text="Retour",
+              command=lambda: _exit_win.destroy()).grid(column=0, row=1)
+    tk.Button(_exit_win, text="Quitter",
+              command=lambda: _game_win.destroy()).grid(column=1, row=1)
 
     return
 
 
-def Other_player():
+def Other_player(event=0):
     global is_player_1
 
     is_player_1 = not is_player_1
@@ -97,17 +107,33 @@ def Other_player():
         for tile in layer:
             if tile.has_char:
                 tile.char.mvt_count = tile.char.mvt_range
-    Rotate_board()
+    Rotate_game()
 
     return
 
 
 # À compléter
 def Play(event=0):
-    global rotation
+    global rotation, rotate
 
+    _gmbrd.delete("all")
+    _gmbrd.create_text(win_width / 2, win_height / 2, text="Chargement…",
+                       font=("Georgia", round(win_width / 24)), tag="tmp",
+                       fill="#ffffff")
     rotation = False
-    print("Click")
+    rotate = original_rotate
+    _gmbrd.after(1000, Recreate_gmbrd)
+
+    return
+
+
+def Recreate_gmbrd():
+
+    _gmbrd.delete("tmp")
+    Create_tiles()
+    Create_char()
+    Button("Quit")
+    Button("Turn")
 
     return
 
@@ -119,6 +145,21 @@ def Create_gmbrd():
     _gmbrd = tk.Canvas(_game_win, width=win_width, height=win_height,
                        bg="#000000")
     _gmbrd.pack()
+
+    # créer les cases
+    Create_tiles()
+
+    # tourner le plateau [provisoire]
+    _gmbrd.after(rotate_delay, Rotate_board)
+
+    # affichage du titre [provisoire]
+    _gmbrd.create_text(win_width/2, win_height/2, text="Python Emblem",
+                       font=("Georgia", round(win_width / 8)),
+                       fill="#ffffff", tag="Title")
+
+    # boutons sur le programme [provisoire]
+    Button("Play")
+    Button("Exit")
 
     return
 
@@ -138,6 +179,7 @@ def Create_char():
 
     for layer in gmbrd:
         for tile in layer:
+            tile.Create_char()
             if tile.has_char:
                 tile.char.Position()
                 _gmbrd.tag_raise(tile.char.gui)
@@ -146,50 +188,62 @@ def Create_char():
     return
 
 
-# Rotation du plateau complet
-def Rotate_board(in_game=True):
-    global original_rotate, rotate, rotate_multiplier, is_slowing, rotation
-
-    # contrôle la quantité de rotation (pas trop tourner)
-    rotation = True
-
-    # si c'est entre le tour de 2 joueurs, tourner d'1/2 tour
-    if in_game:
-        # si on a tourné moins d'1/4 de tour, accélérer
-        if (rotate - original_rotate) % pi < pi / 2:
-            # arrêt de la rotation après 1/2 tour
-            if is_slowing:
-                rotation, rotate_multiplier, is_slowing = False, 0, False
-            # sinon (début du 1/2 tour), accélérer
-            else:
-                rotate_multiplier += rotate_speed
-
-        # sinon, ralentir
-        else:
-            rotate_multiplier -= rotate_speed
-            is_slowing = True
-
-        # mise à jour de la quantité de rotation du plateau
-        rotate = (rotate + pi * rotate_multiplier / 1440) % (2 * pi)
-
-    # si on est sur l'écran d'accueil, rotation à vitesse constante
-    else:
-        rotate = (rotate + pi / 1440) % (2 * pi)
+def Update_rotation():
 
     # mise à jour de la position de chaque case et de chaque personnage
     for layer in gmbrd:
         for tile in layer:
             tile.Position()
-
-    # afficher les personnages devant les cases [à compléter pour perspective]
     for layer in gmbrd:
         for tile in layer:
             if tile.has_char:
                 tile.char.Position()
 
+    return
+
+
+def Rotate_game():
+    global original_rotate, rotate, rotate_multiplier, is_slowing, rotation
+
+    rotation = True
+
+    # si on a tourné moins d'1/4 de tour, accélérer
+    if (rotate - original_rotate) % pi < pi / 2:
+        # arrêt de la rotation après 1/2 tour
+        if is_slowing:
+            rotation, rotate_multiplier, is_slowing = False, 0, False
+        # sinon (début du 1/2 tour), accélérer
+        else:
+            rotate_multiplier += rotate_speed
+
+    # sinon, ralentir
+    else:
+        rotate_multiplier -= rotate_speed
+        is_slowing = True
+
+    # mise à jour de la quantité de rotation du plateau
+    rotate = (rotate + pi * rotate_multiplier / 1440) % (2 * pi)
+
+    Update_rotation()
+
     # attend avant de tourner de nouveau
     if rotation:
-        _gmbrd.after(rotate_delay, Rotate_board, in_game)
+        _gmbrd.after(rotate_delay, Rotate_game)
+
+    return
+
+
+# Rotation du plateau complet
+def Rotate_board():
+    global rotate, rotation
+
+    rotate = (rotate + pi / 1440) % (2 * pi)
+
+    Update_rotation()
+
+    # attend avant de tourner de nouveau
+    if rotation:
+        _gmbrd.after(rotate_delay, Rotate_board)
 
     return
 
@@ -254,14 +308,19 @@ def Change(color, change_type, int_col=1):
 class Button:
 
     def Coord_but(center):
+
         return [center[0] - win_width / 20, center[1] - win_width / 60,
                 center[0] + win_width / 20, center[1] + win_width / 60]
 
+    # Création des boutons
     def __init__(self, name):
 
+        # attributs qualitatifs des boutons
         self.name = name
         self.fill = but_fill
         self.outl = but_outl
+
+        # position du bouton
         self.center = buts_pos[name]
         self.pos = Button.Coord_but(self.center)
 
@@ -269,6 +328,23 @@ class Button:
                                            fill=self.fill, outline=self.outl)
         self.txt = _gmbrd.create_text(self.center, text=self.name,
                                       tag=self.name, fill=self.outl)
+
+        _gmbrd.tag_bind(self.name, "<Enter>", self.Cursor_enter)
+        _gmbrd.tag_bind(self.name, "<Leave>", self.Cursor_leave)
+
+        return
+
+    def Cursor_enter(self, event=0):
+
+        _gmbrd.itemconfig(self.gui, fill=Change(self.fill, "#ffffff"))
+
+        return
+
+    def Cursor_leave(self, event=0):
+
+        _gmbrd.itemconfig(self.gui, fill=self.fill)
+
+        return
 
 
 # Les cases
@@ -412,9 +488,12 @@ class Tile:
         return
 
     def Reachable_enemy(self):
+
         _gmbrd.itemconfig(self.gui, fill=Change(self.type, enemy_tile, 3))
         _gmbrd.itemconfig(self.char.gui,
                           fill=Change(self.char.char, enemy_tile, 3))
+
+        return
 
     # Les autres cases reprennent leur couleur d'origine
     def Recolor(self):
@@ -471,15 +550,13 @@ class Tile:
 
         # création d'un personnage sur les cases de départ
         self.has_char = False
-        if self.color == start_tile_type:
-            self.char = Tile.Character(self)
 
         self.Position()
 
         return
 
     # Lorsqu'une case est cliquée
-    def Cursor_click(self, mouse):
+    def Cursor_click(self, event=0):
 
         # rétablir la couleur des cases à la fin d'un mouvement
         if Tile.clicked and self.type == selected_tile:
@@ -505,7 +582,7 @@ class Tile:
         return
 
     # Lorsque la souris est au-dessus d'une case
-    def Cursor_enter(self, mouse):
+    def Cursor_enter(self, event=0):
 
         # si un mouvement a été commencé, continuer à sélectionner des cases
         if self.type == selected_tile:
@@ -548,7 +625,7 @@ class Tile:
         return
 
     # Lorsque la souris entre dans une case
-    def Cursor_leave(self, mouse):
+    def Cursor_leave(self, event=0):
 
         # si c'est un ennemi qu'on peut attaquer
         if self.has_char and self.char.adj_enemy:
@@ -558,6 +635,15 @@ class Tile:
         else:
             # sinon, juste blanchir la case
             self.Recolor()
+
+        return
+
+    def Create_char(self):
+
+        if self.color == start_tile_type:
+            self.char = Tile.Character(self)
+
+        return
 
     # Les cases peuvent contenir des personnages!
     class Character:
@@ -644,25 +730,10 @@ class Tile:
 # Canevas sur lequel se déroulera le jeu
 Create_gmbrd()
 
-# Création des cases
-Create_tiles()
-
-# Création des personnages
-Create_char()
-
-# Tourner le plateau [provisoire]
-_gmbrd.after(rotate_delay, Rotate_board, False)
-
-# Affichage du titre [provisoire]
-_gmbrd.create_text(win_width/2, win_height/2, text="Python Emblem",
-                   font=("times new roman", round(win_width / 8)),
-                   fill="#ffffff")
-
-# Boutons pour quitter le programme [provisoire]
-button1 = tk.Button(text='QUIT', command=Quit).pack()
-button2 = tk.Button(text='End turn', command=Other_player).pack()
-but_play = Button("Play")
 _gmbrd.tag_bind("Play", "<Button-1>", Play)
+_gmbrd.tag_bind("Exit", "<Button-1>", Quit)
+_gmbrd.tag_bind("Quit", "<Button-1>", Quit)
+_gmbrd.tag_bind("Turn", "<Button-1>", Other_player)
 
 # Création de la fenêtre
 _game_win.mainloop()
