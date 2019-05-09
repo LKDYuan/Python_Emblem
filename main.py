@@ -107,7 +107,7 @@ def Other_player(event=0):
     for layer in gmbrd:
         for tile in layer:
             if tile.has_char:
-                tile.char.mvt_count = tile.char.mvt_range
+                tile.char.mvt_points = tile.char.mvt_range
     Rotate_game()
 
     return
