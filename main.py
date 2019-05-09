@@ -189,7 +189,7 @@ def Create_char():
     return
 
 
-def Update_rotation():
+def Update_display():
 
     # mise à jour de la position de chaque case et de chaque personnage
     for layer in gmbrd:
@@ -225,7 +225,7 @@ def Rotate_game():
     # mise à jour de la quantité de rotation du plateau
     rotate = (rotate + pi * rotate_multiplier / 1440) % (2 * pi)
 
-    Update_rotation()
+    Update_display()
 
     # attend avant de tourner de nouveau
     if rotation:
@@ -240,7 +240,7 @@ def Rotate_board():
 
     rotate = (rotate + pi / 1440) % (2 * pi)
 
-    Update_rotation()
+    Update_display()
 
     # attend avant de tourner de nouveau
     if rotation:
@@ -328,7 +328,8 @@ class Button:
         self.gui = _gmbrd.create_rectangle(self.pos, tag=self.name,
                                            fill=self.fill, outline=self.outl)
         self.txt = _gmbrd.create_text(self.center, text=self.name,
-                                      tag=self.name, fill=self.outl)
+                                      tag=self.name, fill=self.outl,
+                                      font=("Georgia", round(win_width / 72)))
 
         _gmbrd.tag_bind(self.name, "<Enter>", self.Cursor_enter)
         _gmbrd.tag_bind(self.name, "<Leave>", self.Cursor_leave)
@@ -590,7 +591,7 @@ class Tile:
                 self.mvt_distance = 0
                 self.Reachable_tiles()
 
-        Update_rotation()
+        Update_display()
 
         return
 
