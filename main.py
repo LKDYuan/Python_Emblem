@@ -590,6 +590,8 @@ class Tile:
                 self.mvt_distance = 0
                 self.Reachable_tiles()
 
+        Update_rotation()
+
         return
 
     # Lorsque la souris est au-dessus d'une case
