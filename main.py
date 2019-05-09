@@ -62,9 +62,9 @@ enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 
 # Liste des personnages
 characters = {}
-characters["Saber"] = {"ATK": 45, "HP": 200, "DEF": 5},
-characters["Lancer"] = {"ATK": 30, "HP": 400, "DEF": 5},
-characters["Tank"] = {"ATK": 5, "HP": 600, "DEF": 15}
+characters["Saber"] = {"ATK": 45, "HP": 200, "DEF": 5, "MVT": 4},
+characters["Lancer"] = {"ATK": 30, "HP": 400, "DEF": 5, "MVT": 5},
+characters["Tank"] = {"ATK": 5, "HP": 600, "DEF": 15, "MVT": 3}
 
 # Caractéristiques des personnages [provisoire, il faut remplir Liste ^]
 char_types = ["#eeeeee", "#222222"]
