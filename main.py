@@ -102,7 +102,7 @@ def Quit(event=0):
 
     return
 
-
+# Définition des points de mouvement et de la possiblité d'attaquer
 def Other_player(event=0):
     global is_player_1
 
@@ -117,7 +117,7 @@ def Other_player(event=0):
     return
 
 
-# À compléter
+# écran de transition entre le menu de démarrage et le jeu
 def Play(event=0):
     global rotation, rotate
 
@@ -131,7 +131,7 @@ def Play(event=0):
 
     return
 
-
+# fonction qui recrée les cases, personnages et boutons
 def Recreate_gmbrd():
 
     _gmbrd.delete("tmp")
@@ -312,7 +312,8 @@ def Change(color, change_type, int_col=1):
 
 # Les boutons
 class Button:
-
+    
+    # Donne les coordonées des sommets à partir des points du milieu
     def Coord_but(center):
 
         return [center[0] - win_width / 20, center[1] - win_width / 60,
@@ -330,6 +331,7 @@ class Button:
         self.center = buts_pos[name]
         self.pos = Button.Coord_but(self.center)
 
+        # Représentation graphique
         self.gui = _gmbrd.create_rectangle(self.pos, tag=self.name,
                                            fill=self.fill, outline=self.outl)
         self.txt = _gmbrd.create_text(self.center, text=self.name,
@@ -339,11 +341,13 @@ class Button:
         if name == "Settings":
             return
 
+        #actions sur les boutons
         _gmbrd.tag_bind(self.name, "<Enter>", self.Cursor_enter)
         _gmbrd.tag_bind(self.name, "<Leave>", self.Cursor_leave)
 
         return
-
+    
+    # Changent la couleur d ufond quand on passe dessus
     def Cursor_enter(self, event=0):
 
         _gmbrd.itemconfig(self.gui, fill=Change(self.fill, "#ffffff"))
@@ -496,7 +500,8 @@ class Tile:
             _gmbrd.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
 
         return
-
+    
+    # Change la cou leur de la case et du personnage ennemi adjacent
     def Reachable_enemy(self):
 
         _gmbrd.itemconfig(self.gui, fill=Change(self.type, enemy_tile, 3))
