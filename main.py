@@ -106,7 +106,7 @@ def Quit(event=0):
     return
 
 
-# Définition des points de mouvement et de la possiblité d'attaquer
+# À l'autre de jouer !
 def Other_player(event=0):
     global is_player_1
 
