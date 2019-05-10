@@ -91,16 +91,20 @@ but_outl = "#ffffff"
 
 # Arrêt du programme
 def Quit(event=0):
+    global _exit_win
 
     _exit_win = tk.Toplevel(_game_win)
     tk.Label(_exit_win, text="Arrêter le jeu ?"
-             ).grid(column=0, columnspan=2, row=0, padx=20, pady=20)
+             ).grid(column=0, columnspan=3, row=0, padx=80, pady=20)
     tk.Button(_exit_win, text="Retour",
               command=lambda: _exit_win.destroy()).grid(column=0, row=1)
+    tk.Button(_exit_win, text="Recommencer",
+              command=Play).grid(column=1, row=1)
     tk.Button(_exit_win, text="Quitter",
-              command=lambda: _game_win.destroy()).grid(column=1, row=1)
+              command=lambda: _game_win.destroy()).grid(column=2, row=1)
 
     return
+
 
 # Définition des points de mouvement et de la possiblité d'attaquer
 def Other_player(event=0):
@@ -121,6 +125,10 @@ def Other_player(event=0):
 def Play(event=0):
     global rotation, rotate
 
+    try:
+        _exit_win.destroy()
+    except ValueError:
+        pass
     _gmbrd.delete("all")
     _gmbrd.create_text(win_width / 2, win_height / 2, text="Chargement…",
                        font=("Georgia", round(win_width / 24)), tag="tmp",
@@ -131,7 +139,8 @@ def Play(event=0):
 
     return
 
-# fonction qui recrée les cases, personnages et boutons
+
+# Fonction qui recrée les cases, personnages et boutons
 def Recreate_gmbrd():
 
     _gmbrd.delete("tmp")
@@ -194,9 +203,9 @@ def Create_char():
     return
 
 
+# Mise à jour de la position de chaque case et de chaque personnage
 def Update_display():
 
-    # mise à jour de la position de chaque case et de chaque personnage
     for layer in gmbrd:
         for tile in layer:
             tile.Position()
@@ -208,6 +217,7 @@ def Update_display():
     return
 
 
+# Rotation du plateau entre le tour de 2 joueurs
 def Rotate_game():
     global original_rotate, rotate, rotate_multiplier, is_slowing, rotation
 
@@ -239,7 +249,7 @@ def Rotate_game():
     return
 
 
-# Rotation du plateau complet
+# Rotation du plateau à vitesse constante (écran d'accueil)
 def Rotate_board():
     global rotate, rotation
 
@@ -312,7 +322,7 @@ def Change(color, change_type, int_col=1):
 
 # Les boutons
 class Button:
-    
+
     # Donne les coordonées des sommets à partir des points du milieu
     def Coord_but(center):
 
@@ -331,7 +341,7 @@ class Button:
         self.center = buts_pos[name]
         self.pos = Button.Coord_but(self.center)
 
-        # Représentation graphique
+        # représentation graphique
         self.gui = _gmbrd.create_rectangle(self.pos, tag=self.name,
                                            fill=self.fill, outline=self.outl)
         self.txt = _gmbrd.create_text(self.center, text=self.name,
@@ -341,19 +351,20 @@ class Button:
         if name == "Settings":
             return
 
-        #actions sur les boutons
+        # actions sur les boutons
         _gmbrd.tag_bind(self.name, "<Enter>", self.Cursor_enter)
         _gmbrd.tag_bind(self.name, "<Leave>", self.Cursor_leave)
 
         return
-    
-    # Changent la couleur d ufond quand on passe dessus
+
+    # Changent la couleur du fond quand on passe dessus
     def Cursor_enter(self, event=0):
 
         _gmbrd.itemconfig(self.gui, fill=Change(self.fill, "#ffffff"))
 
         return
 
+    # Retour à la couleur d'origine
     def Cursor_leave(self, event=0):
 
         _gmbrd.itemconfig(self.gui, fill=self.fill)
@@ -500,8 +511,8 @@ class Tile:
             _gmbrd.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
 
         return
-    
-    # Change la cou leur de la case et du personnage ennemi adjacent
+
+    # Change la couleur de la case et du personnage ennemi adjacent
     def Reachable_enemy(self):
 
         _gmbrd.itemconfig(self.gui, fill=Change(self.type, enemy_tile, 3))
@@ -633,7 +644,7 @@ class Tile:
         # si un mouvement a été commencé, continuer à sélectionner des cases
         elif self.tmp_reachable:
             Tile.tmp_tile2 = self
-            # Le mouvement ne peut pas être supérieur aux points de mouvement
+            # le mouvement ne peut pas être supérieur aux points de mouvement
             Tile.MVT_count += 1
             self.MVT_distance = Tile.MVT_count
             if self.MVT_distance < Tile.tmp_tile.char.MVT:
@@ -664,6 +675,7 @@ class Tile:
 
         return
 
+    # Création du personnage sur le plateau de jeu
     def Create_char(self):
 
         if self.color == start_tile_type:
@@ -679,16 +691,16 @@ class Tile:
 
             # la case contient effectivement un personnage
             tile.has_char = True
-            self.adj_enemy = False
             # le personnage appartient effectivement à une case
             self.tile = tile
 
-            # nature des personnages [provisoire]
+            # nature des personnages
             # à quel camp appartient-il?
             if tile.side == 1 or tile.side == 2:
                 self.player_1 = True
             else:
                 self.player_1 = False
+            self.adj_enemy = False
             # indication graphique du camp
             if self.player_1:
                 self.out = "#ff0000"
@@ -763,6 +775,7 @@ class Tile:
 # Canevas sur lequel se déroulera le jeu
 Create_gmbrd()
 
+# Actions sur les boutons
 _gmbrd.tag_bind("Play", "<Button-1>", Play)
 _gmbrd.tag_bind("Exit", "<Button-1>", Quit)
 _gmbrd.tag_bind("Quit", "<Button-1>", Quit)
