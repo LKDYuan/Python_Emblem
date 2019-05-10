@@ -63,13 +63,13 @@ enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 # Liste des personnages
 characters = {}
 characters["Saber"] = {
-    "ATK": 45, "HP": 390, "DEF": 20, "MVT": 4, "COL": "#cfcf00",
+    "HP": 360, "ATK": 540, "DEF": 200, "MVT": 4, "COL": "#cfcf00",
     }
 characters["Lancer"] = {
-    "ATK": 40, "HP": 450, "DEF": 20, "MVT": 5, "COL": "#00cfcf",
+    "HP": 410, "ATK": 480, "DEF": 280, "MVT": 5, "COL": "#00cfcf",
     }
 characters["Tanker"] = {
-    "ATK": 30, "HP": 550, "DEF": 25, "MVT": 3, "COL": "#cf00cf",
+    "HP": 450, "ATK": 370, "DEF": 390, "MVT": 3, "COL": "#cf00cf",
     }
 
 # Liste des boutons
@@ -575,15 +575,13 @@ class Tile:
             # déplacement du personnage à la case d'arrivée
             Tile.tmp_tile.char.Move(self)
 
-            # réinitialisation des variables pour un nouveau mouvement
-            Tile.clicked = False
-
         # enlève des points de vie au personnage adjacent
         elif self.char.adj_enemy and not Tile.tmp_tile.char.has_attacked:
-            Tile.tmp_tile.char.Move(Tile.tmp_tile2)
+            Clear_board(True)
             tmp = self.char.HP - Tile.tmp_tile.char.ATK + self.char.DEF
             self.char.HP = tmp if tmp < self.char.HP else self.char.HP
-            Tile.tmp_tile2.char.has_attacked = True
+            Tile.tmp_tile.char.has_attacked = True
+            Tile.tmp_tile.char.Move(Tile.tmp_tile2)
             if self.char.HP <= 0:
                 _gmbrd.delete(self.char.gui)
                 _gmbrd.delete(self.char.txt)
@@ -595,6 +593,7 @@ class Tile:
             if self.char.player_1 == is_player_1 and self.char.MVT != 0:
                 Tile.clicked = True
                 Tile.tmp_tile = self
+                Tile.tmp_tile2 = self
 
                 # compteur des cases parcourues (pour respecter le mouvement)
                 self.MVT_distance = 0
@@ -607,9 +606,8 @@ class Tile:
     # Lorsque la souris est au-dessus d'une case
     def Cursor_enter(self, event=0):
 
-        # si un mouvement a été commencé, continuer à sélectionner des cases
+        # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
         if self.type == selected_tile:
-            Tile.tmp_tile2 = self
             Tile.MVT_count = self.MVT_distance
 
             # désélection des cases plus loin dans la trajectoire
@@ -627,8 +625,9 @@ class Tile:
             if Tile.MVT_count != Tile.tmp_tile.char.MVT:
                 self.Reachable_tiles()
 
-        # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
+        # si un mouvement a été commencé, continuer à sélectionner des cases
         elif self.tmp_reachable:
+            Tile.tmp_tile2 = self
             # Le mouvement ne peut pas être supérieur aux points de mouvement
             Tile.MVT_count += 1
             self.MVT_distance = Tile.MVT_count
@@ -738,6 +737,8 @@ class Tile:
             self.tile.has_char = True
             self.MVT -= Tile.MVT_count
 
+            # réinitialisation des variables pour un nouveau mouvement
+            Tile.clicked = False
             Tile.MVT_count = 0
 
             # mise à jour des actions sur le personnage (nouvelle case)
