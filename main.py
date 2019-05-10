@@ -62,13 +62,12 @@ enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 
 # Liste des personnages
 characters = {}
-characters["Saber"] = {"ATK": 45, "HP": 200, "DEF": 5, "MVT": 4},
-characters["Lancer"] = {"ATK": 30, "HP": 400, "DEF": 5, "MVT": 5},
-characters["Tank"] = {"ATK": 5, "HP": 600, "DEF": 15, "MVT": 3}
-
-# Caractéristiques des personnages [provisoire, il faut remplir Liste ^]
-char_types = ["#eeeeee", "#222222"]
-mvt_types = range(3, 6)  # ! Attention, la limite supérieure est Off by One !
+characters["Saber"] = {"ATK": 45, "HP": 200, "DEF": 5, "MVT": 4,
+                       "COL": "#2f2f2f",}
+characters["Lancer"] = {"ATK": 30, "HP": 400, "DEF": 5, "MVT": 5,
+                        "COL": "#7f7f7f",}
+characters["Tanker"] = {"ATK": 15, "HP": 600, "DEF": 15, "MVT": 3,
+                        "COL": "#cfcfcf",}
 
 # Liste des boutons
 buts_pos = {}
@@ -108,7 +107,7 @@ def Other_player(event=0):
     for layer in gmbrd:
         for tile in layer:
             if tile.has_char:
-                tile.char.mvt_points = tile.char.mvt_range
+                tile.char.MVT = characters[tile.char.char]["MVT"]
     Rotate_game()
 
     return
@@ -362,7 +361,7 @@ class Tile:
     # A-t-on initié un mouvement pour un personnage?
     clicked = False
     # Compteur des cases parcourues lors d'un mouvement
-    mvt_count = 0
+    MVT_count = 0
 
     # Position de la case
     def Position(self):
@@ -498,7 +497,7 @@ class Tile:
 
         _gmbrd.itemconfig(self.gui, fill=Change(self.type, enemy_tile, 3))
         _gmbrd.itemconfig(self.char.gui,
-                          fill=Change(self.char.char, enemy_tile, 3))
+                          fill=Change(self.char.COL, enemy_tile, 3))
 
         return
 
@@ -508,7 +507,7 @@ class Tile:
         if not self.tmp_reachable:
             _gmbrd.itemconfig(self.gui, fill=self.type)
             if self.has_char:
-                _gmbrd.itemconfig(self.char.gui, fill=self.char.char)
+                _gmbrd.itemconfig(self.char.gui, fill=self.char.COL)
 
         return
 
@@ -574,13 +573,14 @@ class Tile:
 
             # réinitialisation des variables pour un nouveau mouvement
             Tile.clicked = False
-            Tile.mvt_count = 0
+            Tile.MVT_count = 0
 
         # enlève des points de vie au personnage adjacent
         elif self.char.adj_enemy:
             if self.char.player_1 != is_player_1:
-                self.char.HP = self.char.HP - self.char.ATK
-                if self.char.HP == 0:
+                tmp = self.char.HP - Tile.tmp_tile.char.ATK + self.char.DEF
+                self.char.HP = tmp if tmp < self.char.HP else self.char.HP
+                if self.char.HP <= 0:
                     _gmbrd.delete(self.char.gui)
                     _gmbrd.delete(self.char.txt)
                     self.has_char = False
@@ -588,12 +588,12 @@ class Tile:
 
         # commencer le mouvement lorsqu'on sélectionne un personnage
         elif self.has_char and not Tile.clicked:
-            if self.char.player_1 == is_player_1 and self.char.mvt_points != 0:
+            if self.char.player_1 == is_player_1 and self.char.MVT != 0:
                 Tile.clicked = True
                 Tile.tmp_tile = self
 
                 # compteur des cases parcourues (pour respecter le mouvement)
-                self.mvt_distance = 0
+                self.MVT_distance = 0
                 self.Reachable_tiles()
 
         Update_display()
@@ -605,31 +605,31 @@ class Tile:
 
         # si un mouvement a été commencé, continuer à sélectionner des cases
         if self.type == selected_tile:
-            Tile.mvt_count = self.mvt_distance
+            Tile.MVT_count = self.MVT_distance
 
             # désélection des cases plus loin dans la trajectoire
             for layer in gmbrd:
                 for tile in layer:
                     try:
-                        if tile.mvt_distance > self.mvt_distance:
-                            del tile.mvt_distance
+                        if tile.MVT_distance > self.MVT_distance:
+                            del tile.MVT_distance
                             tile.type = tile.color
                             _gmbrd.itemconfig(self.gui, fill=self.type)
                     except AttributeError:
                         pass
 
             # calcul des cases adjacentes à la nouvelle
-            if Tile.mvt_count != Tile.tmp_tile.char.mvt_points:
+            if Tile.MVT_count != Tile.tmp_tile.char.MVT:
                 self.Reachable_tiles()
 
         # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
         elif self.tmp_reachable:
             # Le mouvement ne peut pas être supérieur aux points de mouvement
-            Tile.mvt_count += 1
-            self.mvt_distance = Tile.mvt_count
-            if self.mvt_distance < Tile.tmp_tile.char.mvt_points:
+            Tile.MVT_count += 1
+            self.MVT_distance = Tile.MVT_count
+            if self.MVT_distance < Tile.tmp_tile.char.MVT:
                 self.Reachable_tiles()
-            elif self.mvt_distance == Tile.tmp_tile.char.mvt_points:
+            elif self.MVT_distance == Tile.tmp_tile.char.MVT:
                 self.Reachable_tiles(True)
                 self.tmp_reachable = True
 
@@ -675,8 +675,6 @@ class Tile:
             self.adj_enemy = False
             # le personnage appartient effectivement à une case
             self.tile = tile
-            self.HP = 100
-            self.ATK = 25
 
             # nature des personnages [provisoire]
             # à quel camp appartient-il?
@@ -690,18 +688,20 @@ class Tile:
             else:
                 self.out = "#00ff00"
             # qui est-ce?
-            self.char = choice(char_types)
-            # quel est son déplacement?
-            self.mvt_range = choice(mvt_types)
-            self.mvt_points = self.mvt_range
+            self.char = choice(list(characters.keys()))
+            self.HP = characters[self.char]["HP"]
+            self.ATK = characters[self.char]["ATK"]
+            self.DEF = characters[self.char]["DEF"]
+            self.MVT = characters[self.char]["MVT"]
+            self.COL = characters[self.char]["COL"]
 
             # représentation graphique du personnage [provisoire - images]
             self.gui = _gmbrd.create_rectangle(0, 0, 0, 0, width=2,
-                                               fill=self.char,
+                                               fill=self.COL,
                                                outline=self.out, tag=tile.tag)
             # affichage du déplacement du personnage [provisoire]
             self.txt = _gmbrd.create_text(0, 0, text=self.HP,
-                                          fill=Change(self.char, "Opp"),
+                                          fill=Change(self.COL, "Opp"),
                                           tag=tile.tag)
 
             return
@@ -732,7 +732,7 @@ class Tile:
             tile.char = self
             self.tile = tile
             self.tile.has_char = True
-            self.mvt_points -= Tile.mvt_count
+            self.MVT -= Tile.MVT_count
 
             # mise à jour des actions sur le personnage (nouvelle case)
             _gmbrd.itemconfig(self.gui, tag=tile.tag)
