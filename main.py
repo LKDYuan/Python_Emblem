@@ -715,11 +715,11 @@ class Tile:
             self.COL = characters[self.char]["COL"]
             self.has_attacked = False
 
-            # représentation graphique du personnage [provisoire - images]
+            # représentation graphique du personnage
             self.gui = _gmbrd.create_rectangle(0, 0, 0, 0, width=2,
                                                fill=self.COL,
                                                outline=self.out, tag=tile.tag)
-            # affichage du déplacement du personnage [provisoire]
+            # affichage des HP
             self.txt = _gmbrd.create_text(0, 0, text=self.HP,
                                           fill=Change(self.COL, "Opp"),
                                           tag=tile.tag)
@@ -729,13 +729,13 @@ class Tile:
         # Position du personnage
         def Position(self):
 
-            # Position du personnage en soit [provisoire]
+            # Position du personnage
             _gmbrd.coords(self.gui, self.tile.x - 0.15 * tl_size,
                           self.tile.disp_y - tl_side,
                           self.tile.x + 0.15 * tl_size,
                           self.tile.disp_y)
 
-            # Position du déplacement du personnage [provisoire]
+            # Position des HP
             _gmbrd.coords(self.txt, self.tile.x,
                           self.tile.disp_y - tl_side / 2)
             _gmbrd.itemconfig(self.txt, text=self.HP)
