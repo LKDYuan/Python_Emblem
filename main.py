@@ -62,12 +62,15 @@ enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 
 # Liste des personnages
 characters = {}
-characters["Saber"] = {"ATK": 45, "HP": 200, "DEF": 5, "MVT": 4,
-                       "COL": "#2f2f2f",}
-characters["Lancer"] = {"ATK": 30, "HP": 400, "DEF": 5, "MVT": 5,
-                        "COL": "#7f7f7f",}
-characters["Tanker"] = {"ATK": 15, "HP": 600, "DEF": 15, "MVT": 3,
-                        "COL": "#cfcfcf",}
+characters["Saber"] = {
+    "ATK": 45, "HP": 200, "DEF": 5, "MVT": 4, "COL": "#cfcf00",
+    }
+characters["Lancer"] = {
+    "ATK": 30, "HP": 400, "DEF": 5, "MVT": 5, "COL": "#00cfcf",
+    }
+characters["Tanker"] = {
+    "ATK": 15, "HP": 600, "DEF": 15, "MVT": 3, "COL": "#cf00cf",
+    }
 
 # Liste des boutons
 buts_pos = {}
