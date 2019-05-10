@@ -127,7 +127,7 @@ def Play(event=0):
 
     try:
         _exit_win.destroy()
-    except ValueError:
+    except NameError:
         pass
     _gmbrd.delete("all")
     _gmbrd.create_text(win_width / 2, win_height / 2, text="Chargement…",
