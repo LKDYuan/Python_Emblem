@@ -63,13 +63,13 @@ enemy_tile = "#ff0000"  # Coloration des cases des ennemis
 # Liste des personnages
 characters = {}
 characters["Saber"] = {
-    "ATK": 45, "HP": 200, "DEF": 5, "MVT": 4, "COL": "#cfcf00",
+    "ATK": 45, "HP": 390, "DEF": 20, "MVT": 4, "COL": "#cfcf00",
     }
 characters["Lancer"] = {
-    "ATK": 30, "HP": 400, "DEF": 5, "MVT": 5, "COL": "#00cfcf",
+    "ATK": 40, "HP": 450, "DEF": 20, "MVT": 5, "COL": "#00cfcf",
     }
 characters["Tanker"] = {
-    "ATK": 15, "HP": 600, "DEF": 15, "MVT": 3, "COL": "#cf00cf",
+    "ATK": 30, "HP": 550, "DEF": 25, "MVT": 3, "COL": "#cf00cf",
     }
 
 # Liste des boutons
@@ -111,6 +111,7 @@ def Other_player(event=0):
         for tile in layer:
             if tile.has_char:
                 tile.char.MVT = characters[tile.char.char]["MVT"]
+                tile.char.has_attacked = False
     Rotate_game()
 
     return
@@ -576,18 +577,18 @@ class Tile:
 
             # réinitialisation des variables pour un nouveau mouvement
             Tile.clicked = False
-            Tile.MVT_count = 0
 
         # enlève des points de vie au personnage adjacent
-        elif self.char.adj_enemy:
-            if self.char.player_1 != is_player_1:
-                tmp = self.char.HP - Tile.tmp_tile.char.ATK + self.char.DEF
-                self.char.HP = tmp if tmp < self.char.HP else self.char.HP
-                if self.char.HP <= 0:
-                    _gmbrd.delete(self.char.gui)
-                    _gmbrd.delete(self.char.txt)
-                    self.has_char = False
-                    del self.char
+        elif self.char.adj_enemy and not Tile.tmp_tile.char.has_attacked:
+            Tile.tmp_tile.char.Move(Tile.tmp_tile2)
+            tmp = self.char.HP - Tile.tmp_tile.char.ATK + self.char.DEF
+            self.char.HP = tmp if tmp < self.char.HP else self.char.HP
+            Tile.tmp_tile2.char.has_attacked = True
+            if self.char.HP <= 0:
+                _gmbrd.delete(self.char.gui)
+                _gmbrd.delete(self.char.txt)
+                self.has_char = False
+                del self.char
 
         # commencer le mouvement lorsqu'on sélectionne un personnage
         elif self.has_char and not Tile.clicked:
@@ -608,6 +609,7 @@ class Tile:
 
         # si un mouvement a été commencé, continuer à sélectionner des cases
         if self.type == selected_tile:
+            Tile.tmp_tile2 = self
             Tile.MVT_count = self.MVT_distance
 
             # désélection des cases plus loin dans la trajectoire
@@ -651,12 +653,10 @@ class Tile:
 
         # si c'est un ennemi qu'on peut attaquer
         if self.has_char and self.char.adj_enemy:
-            # faire des choses
-            pass
+            return
 
-        else:
-            # sinon, juste blanchir la case
-            self.Recolor()
+        # sinon, juste blanchir la case
+        self.Recolor()
 
         return
 
@@ -685,7 +685,7 @@ class Tile:
                 self.player_1 = True
             else:
                 self.player_1 = False
-            # indication graphique tu camp
+            # indication graphique du camp
             if self.player_1:
                 self.out = "#ff0000"
             else:
@@ -697,6 +697,7 @@ class Tile:
             self.DEF = characters[self.char]["DEF"]
             self.MVT = characters[self.char]["MVT"]
             self.COL = characters[self.char]["COL"]
+            self.has_attacked = False
 
             # représentation graphique du personnage [provisoire - images]
             self.gui = _gmbrd.create_rectangle(0, 0, 0, 0, width=2,
@@ -736,6 +737,8 @@ class Tile:
             self.tile = tile
             self.tile.has_char = True
             self.MVT -= Tile.MVT_count
+
+            Tile.MVT_count = 0
 
             # mise à jour des actions sur le personnage (nouvelle case)
             _gmbrd.itemconfig(self.gui, tag=tile.tag)
