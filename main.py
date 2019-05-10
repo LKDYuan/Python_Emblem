@@ -6,8 +6,6 @@
 # Python Emblem
 # #########
 
-# drop.io
-
 import tkinter as tk
 from math import cos, sin, asin, pi
 from random import choice
