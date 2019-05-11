@@ -4,7 +4,7 @@ This repository is to centralize all files used in this school project, Python E
 
 <i>On centralisera ici tous les fichiers utilisés dans le projet de Python Emblem !</i>
 
-Tout le code se trouve dans le fichier <code>main.py</code> <b>.
+Tout le code se trouve dans le fichier <code>main.py</code>.
 
 
 # Fonctions du programme (liste obsolète)
