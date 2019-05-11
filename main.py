@@ -269,7 +269,7 @@ def Clear_board(clear_all):
         for tile in layer:
             tile.tmp_reachable = False
             if clear_all:
-                tile.type = tile.color
+                tile.color = tile.type
             if tile.has_char:
                 tile.char.adj_enemy = False
             tile.Recolor()
@@ -435,8 +435,8 @@ class Tile:
         global temp_bool
         temp_bool = only_enemies
 
-        self.type = selected_tile
-        _gmbrd.itemconfig(self.gui, fill=self.type)
+        self.color = selected_tile
+        _gmbrd.itemconfig(self.gui, fill=self.color)
         Clear_board(False)
 
         # pour la case du centre
@@ -503,17 +503,17 @@ class Tile:
             if self.char.player_1 != is_player_1:
                 self.char.adj_enemy = True
                 self.Reachable_enemy()
-        elif (self.type != unreachable and self.type != selected_tile and
+        elif (self.color != unreachable and self.color != selected_tile and
               not temp_bool):
             self.tmp_reachable = True
-            _gmbrd.itemconfig(self.gui, fill=Change(self.type, adj_tiles, 2))
+            _gmbrd.itemconfig(self.gui, fill=Change(self.color, adj_tiles, 2))
 
         return
 
     # Change la couleur de la case et du personnage ennemi adjacent
     def Reachable_enemy(self):
 
-        _gmbrd.itemconfig(self.gui, fill=Change(self.type, enemy_tile, 3))
+        _gmbrd.itemconfig(self.gui, fill=Change(self.color, enemy_tile, 3))
         _gmbrd.itemconfig(self.char.gui,
                           fill=Change(self.char.COL, enemy_tile, 3))
 
@@ -523,7 +523,7 @@ class Tile:
     def Recolor(self):
 
         if not self.tmp_reachable:
-            _gmbrd.itemconfig(self.gui, fill=self.type)
+            _gmbrd.itemconfig(self.gui, fill=self.color)
             if self.has_char:
                 _gmbrd.itemconfig(self.char.gui, fill=self.char.COL)
 
@@ -533,7 +533,7 @@ class Tile:
     def __init__(self, layer, indice):
 
         # attributs qualitatifs de la case
-        self.color = Tile.Tile_type()
+        self.type = Tile.Tile_type()
         self.tmp_reachable = False
 
         # coordonnées de la case
@@ -556,15 +556,15 @@ class Tile:
         # différentiation des cases de départ
         if self.layer == board_side - 1:
             if self.side == 1 or self.side == 4:
-                self.color = start_tile_type
+                self.type = start_tile_type
             if (self.side == 2 or self.side == 5) and self.pos == 0:
-                self.color = start_tile_type
+                self.type = start_tile_type
 
         # coloration de la case
-        self.type = self.color
+        self.color = self.type
 
         # représentation graphique de la case
-        self.gui = _gmbrd.create_polygon(0, 0, width=0, fill=self.type,
+        self.gui = _gmbrd.create_polygon(0, 0, width=0, fill=self.color,
                                          tag=self.tag)
 
         # actions sur les cases
@@ -583,7 +583,7 @@ class Tile:
     def Cursor_click(self, event=0):
 
         # rétablir la couleur des cases à la fin d'un mouvement
-        if Tile.clicked and self.type == selected_tile:
+        if Tile.clicked and self.color == selected_tile:
             Clear_board(True)
 
             # déplacement du personnage à la case d'arrivée
@@ -621,7 +621,7 @@ class Tile:
     def Cursor_enter(self, event=0):
 
         # si on passe sur une case déjà sélectionnée, recalculer la trajectoire
-        if self.type == selected_tile:
+        if self.color == selected_tile:
             Tile.MVT_count = self.MVT_distance
 
             # désélection des cases plus loin dans la trajectoire
@@ -630,8 +630,8 @@ class Tile:
                     try:
                         if tile.MVT_distance > self.MVT_distance:
                             del tile.MVT_distance
-                            tile.type = tile.color
-                            _gmbrd.itemconfig(self.gui, fill=self.type)
+                            tile.color = tile.type
+                            _gmbrd.itemconfig(self.gui, fill=self.color)
                     except AttributeError:
                         pass
 
@@ -653,7 +653,7 @@ class Tile:
 
         # dans les autres cas, blanchir la case
         else:
-            tmp_color = Change(self.color, "#ffffff", 0.5)
+            tmp_color = Change(self.type, "#ffffff", 0.5)
             _gmbrd.itemconfig(self.gui, fill=tmp_color)
             if self.has_char:
                 if self.char.adj_enemy:
@@ -676,7 +676,7 @@ class Tile:
     # Création du personnage sur le plateau de jeu
     def Create_char(self):
 
-        if self.color == start_tile_type:
+        if self.type == start_tile_type:
             self.char = Tile.Character(self)
 
         return
