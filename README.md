@@ -1,13 +1,13 @@
-# Smash Emblem
+# Python Emblem
 
 This repository is to centralize all files used in this school project, Python Emblem.
 
 <i>On centralisera ici tous les fichiers utilisés dans le projet de Python Emblem !</i>
 
-<code>2019_ISN_Projet_Python-Emblem.py</code> <b><i>est obsolète, la version mise à jour est</i></b> <code>Gameboard_temp.py</code>
+Tout le code se trouve dans le fichier <code>main.py</code> <b>.
 
 
-# Fonctions du programme
+# Fonctions du programme (liste obsolète)
 
 <i>Toutes les variables citées sont définies dans l'en-tête du programme, sauf indication contraire</i>
 
